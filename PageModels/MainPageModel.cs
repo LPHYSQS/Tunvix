@@ -23,6 +23,9 @@ namespace Tunvix.PageModels
         [ObservableProperty]
         private double _playbackProgress = 0.36;
 
+        [ObservableProperty]
+        private bool _isPlaylistDrawerOpen;
+
         public string PlayPauseGlyph => IsPlaying
             ? FluentUI.pause_24_regular
             : FluentUI.play_24_regular;
@@ -137,6 +140,14 @@ namespace Tunvix.PageModels
         [RelayCommand]
         private void TogglePlayback() =>
             IsPlaying = !IsPlaying;
+
+        [RelayCommand]
+        private void OpenPlaylistDrawer() =>
+            IsPlaylistDrawerOpen = true;
+
+        [RelayCommand]
+        private void ClosePlaylistDrawer() =>
+            IsPlaylistDrawerOpen = false;
 
         [RelayCommand]
         private void ToggleTheme()
