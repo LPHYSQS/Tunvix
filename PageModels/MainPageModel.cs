@@ -7,16 +7,10 @@ using Tunvix.Services;
 
 namespace Tunvix.PageModels
 {
-    public enum PlaybackMode
-    {
-        Sequential,
-        SingleLoop,
-        Shuffle
-    }
-
     public partial class MainPageModel : ObservableObject
     {
         private readonly ThemeService _themeService;
+        private readonly PlaybackModeService _playbackModeService;
 
         [ObservableProperty]
         private ObservableCollection<MusicTrack> _playlist = new();
@@ -68,9 +62,12 @@ namespace Tunvix.PageModels
 
         public string PlaybackModeDescription => $"{PlaybackModeLabel}\uff0c\u70b9\u51fb\u5207\u6362";
 
-        public MainPageModel(ThemeService themeService)
+        public MainPageModel(
+            ThemeService themeService,
+            PlaybackModeService playbackModeService)
         {
             _themeService = themeService;
+            _playbackModeService = playbackModeService;
 
             Playlist = new ObservableCollection<MusicTrack>
             {
@@ -125,6 +122,7 @@ namespace Tunvix.PageModels
             };
 
             SelectedTrack = Playlist.FirstOrDefault();
+            PlaybackMode = _playbackModeService.GetStoredMode();
         }
 
         partial void OnSelectedTrackChanged(MusicTrack? oldValue, MusicTrack? newValue)
@@ -159,6 +157,7 @@ namespace Tunvix.PageModels
 
         partial void OnPlaybackModeChanged(PlaybackMode value)
         {
+            _playbackModeService.SaveMode(value);
             OnPropertyChanged(nameof(PlaybackModeLabel));
             OnPropertyChanged(nameof(PlaybackModeGlyph));
             OnPropertyChanged(nameof(PlaybackModeDescription));

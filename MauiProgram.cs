@@ -50,6 +50,7 @@ namespace Tunvix
             builder.Services.AddSingleton<SeedDataService>();
             builder.Services.AddSingleton<ModalErrorHandler>();
             builder.Services.AddSingleton<ThemeService>();
+            builder.Services.AddSingleton<PlaybackModeService>();
             builder.Services.AddSingleton<MainPageModel>();
             builder.Services.AddSingleton<ProjectListPageModel>();
             builder.Services.AddSingleton<ManageMetaPageModel>();
