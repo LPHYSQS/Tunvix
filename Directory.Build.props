@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
+    <AndroidSdkDirectory Condition="'$(AndroidSdkDirectory)' == '' and '$(ANDROID_SDK_ROOT)' != ''">$(ANDROID_SDK_ROOT)</AndroidSdkDirectory>
+    <AndroidSdkDirectory Condition="'$(AndroidSdkDirectory)' == '' and '$(ANDROID_HOME)' != ''">$(ANDROID_HOME)</AndroidSdkDirectory>
+    <AndroidSdkDirectory Condition="'$(AndroidSdkDirectory)' == '' and Exists('D:\Android\writable-sdk')">D:\Android\writable-sdk</AndroidSdkDirectory>
+    <AndroidSdkDirectory Condition="'$(AndroidSdkDirectory)' == '' and Exists('D:\Android\vs-android-sdk')">D:\Android\vs-android-sdk</AndroidSdkDirectory>
+
+    <JavaSdkDirectory Condition="'$(JavaSdkDirectory)' == '' and '$(JAVA_HOME)' != ''">$(JAVA_HOME)</JavaSdkDirectory>
+    <JavaSdkDirectory Condition="'$(JavaSdkDirectory)' == '' and Exists('D:\Android\openjdk\jdk-17.0.12')">D:\Android\openjdk\jdk-17.0.12</JavaSdkDirectory>
+  </PropertyGroup>
+</Project>
