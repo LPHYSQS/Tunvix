@@ -79,7 +79,14 @@ namespace Tunvix.Platforms.Android.Services
             var document = DocumentFile.FromTreeUri(activity, treeUri);
             var displayName = document?.Name ?? "已选择文件夹";
 
-            taskCompletionSource.TrySetResult(new FolderSelectionResult(treeUri.ToString(), displayName));
+            var treeUriText = treeUri.ToString();
+            if (string.IsNullOrWhiteSpace(treeUriText))
+            {
+                taskCompletionSource.TrySetResult(null);
+                return true;
+            }
+
+            taskCompletionSource.TrySetResult(new FolderSelectionResult(treeUriText, displayName));
             return true;
         }
     }

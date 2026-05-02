@@ -56,6 +56,7 @@ namespace Tunvix
             builder.Services.AddSingleton<IErrorHandler>(serviceProvider => serviceProvider.GetRequiredService<ModalErrorHandler>());
             builder.Services.AddSingleton<ThemeService>();
             builder.Services.AddSingleton<PlaybackModeService>();
+            builder.Services.AddSingleton<IPlaybackStateService, PlaybackStateService>();
 
 #if ANDROID
             builder.Services.AddSingleton<IAndroidFolderPickerService, AndroidFolderPickerService>();

@@ -79,8 +79,11 @@ namespace Tunvix.Platforms.Android.Services
                 columnRelativePath
             };
 
+            var mediaStoreUri = MediaStore.Audio.Media.ExternalContentUri
+                ?? throw new InvalidOperationException("Android media store is unavailable.");
+
             using var cursor = resolver.Query(
-                MediaStore.Audio.Media.ExternalContentUri,
+                mediaStoreUri,
                 projection,
                 "is_music != 0",
                 null,
@@ -184,7 +187,19 @@ namespace Tunvix.Platforms.Android.Services
                 return null;
             }
 
-            var contentUri = ContentUris.WithAppendedId(MediaStore.Audio.Media.ExternalContentUri, id);
+            var mediaStoreUri = MediaStore.Audio.Media.ExternalContentUri;
+            if (mediaStoreUri is null)
+            {
+                return null;
+            }
+
+            var contentUri = ContentUris.WithAppendedId(mediaStoreUri, id);
+            var sourceUri = contentUri.ToString();
+            if (string.IsNullOrWhiteSpace(sourceUri))
+            {
+                return null;
+            }
+
             var displayName = GetString(cursor, displayNameColumn);
             var title = NormalizeTitle(GetString(cursor, titleColumn), displayName);
             var artist = NormalizeArtist(GetString(cursor, artistColumn));
@@ -197,7 +212,7 @@ namespace Tunvix.Platforms.Android.Services
                 Title = title,
                 Artist = artist,
                 DurationMilliseconds = durationMilliseconds,
-                SourceUri = contentUri.ToString(),
+                SourceUri = sourceUri,
                 SourcePath = BuildDisplayPath(relativePath, displayName),
                 MimeType = mimeType,
                 ImportScope = "device"
@@ -208,8 +223,15 @@ namespace Tunvix.Platforms.Android.Services
         {
             try
             {
+                var fileUri = file.Uri;
+                var sourceUri = fileUri?.ToString();
+                if (string.IsNullOrWhiteSpace(sourceUri))
+                {
+                    return null;
+                }
+
                 using var metadataRetriever = new MediaMetadataRetriever();
-                metadataRetriever.SetDataSource(_context, file.Uri);
+                metadataRetriever.SetDataSource(_context, fileUri);
 
                 var title = NormalizeTitle(
                     metadataRetriever.ExtractMetadata(MetadataKey.Title),
@@ -223,7 +245,7 @@ namespace Tunvix.Platforms.Android.Services
                     Title = title,
                     Artist = artist,
                     DurationMilliseconds = durationMilliseconds,
-                    SourceUri = file.Uri.ToString(),
+                    SourceUri = sourceUri,
                     SourcePath = relativePath,
                     MimeType = mimeType,
                     ImportScope = "folder",
@@ -242,9 +264,14 @@ namespace Tunvix.Platforms.Android.Services
             ICollection<(DocumentFile file, string relativePath)> results,
             CancellationToken cancellationToken)
         {
-            foreach (var child in directory.ListFiles())
+            foreach (var child in directory.ListFiles() ?? Array.Empty<DocumentFile>())
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                if (child is null)
+                {
+                    continue;
+                }
 
                 if (child.IsDirectory)
                 {

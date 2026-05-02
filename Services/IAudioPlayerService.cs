@@ -12,6 +12,8 @@ namespace Tunvix.Services
 
         TimeSpan Duration { get; }
 
+        Task LoadAsync(string sourceUri, CancellationToken cancellationToken = default);
+
         Task PlayAsync(string sourceUri, CancellationToken cancellationToken = default);
 
         Task PauseAsync(CancellationToken cancellationToken = default);

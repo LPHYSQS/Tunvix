@@ -26,13 +26,19 @@ namespace Tunvix.PageModels
         private readonly AudioTrackRepository _audioTrackRepository;
         private readonly IAudioLibraryImportService _audioLibraryImportService;
         private readonly IAudioPlayerService _audioPlayerService;
+        private readonly IPlaybackStateService _playbackStateService;
         private readonly IErrorHandler _errorHandler;
         private readonly Random _random = new();
 
         private bool _isInitialized;
         private bool _isUpdatingProgressFromPlayer;
         private bool _isHandlingPlaybackEnded;
+        private bool _isRestoringPlaybackState;
+        private bool _hasPreparedTrack;
         private long _currentDurationMilliseconds;
+        private long _lastPersistedPositionMilliseconds = -1;
+        private bool? _lastPersistedIsPlaying;
+        private string? _lastPersistedSourceUri;
 
         [ObservableProperty]
         private ObservableCollection<MusicTrack> _playlist = new();
@@ -70,6 +76,7 @@ namespace Tunvix.PageModels
             AudioTrackRepository audioTrackRepository,
             IAudioLibraryImportService audioLibraryImportService,
             IAudioPlayerService audioPlayerService,
+            IPlaybackStateService playbackStateService,
             IErrorHandler errorHandler)
         {
             _themeService = themeService;
@@ -77,6 +84,7 @@ namespace Tunvix.PageModels
             _audioTrackRepository = audioTrackRepository;
             _audioLibraryImportService = audioLibraryImportService;
             _audioPlayerService = audioPlayerService;
+            _playbackStateService = playbackStateService;
             _errorHandler = errorHandler;
 
             PlaybackMode = _playbackModeService.GetStoredMode();
@@ -149,7 +157,48 @@ namespace Tunvix.PageModels
             }
 
             await LoadPlaylistAsync(preserveCurrentSelection: false);
+            await RestorePlaybackStateAsync();
             _isInitialized = true;
+        }
+
+        public void PersistPlaybackState(bool force = false)
+        {
+            if (_isRestoringPlaybackState)
+            {
+                return;
+            }
+
+            if (!_isInitialized && !_hasPreparedTrack)
+            {
+                return;
+            }
+
+            if (!_hasPreparedTrack
+                || SelectedTrack is null
+                || string.IsNullOrWhiteSpace(SelectedTrack.SourceUri))
+            {
+                ClearPersistedPlaybackState();
+                return;
+            }
+
+            var snapshot = new PlaybackStateSnapshot(
+                SelectedTrack.SourceUri,
+                SelectedTrack.SourcePath,
+                GetCurrentPositionMilliseconds(),
+                _audioPlayerService.IsPlaying);
+
+            if (!force
+                && string.Equals(snapshot.TrackSourceUri, _lastPersistedSourceUri, StringComparison.Ordinal)
+                && snapshot.ShouldResumePlayback == _lastPersistedIsPlaying
+                && Math.Abs(snapshot.PositionMilliseconds - _lastPersistedPositionMilliseconds) < 1000)
+            {
+                return;
+            }
+
+            _playbackStateService.Save(snapshot);
+            _lastPersistedSourceUri = snapshot.TrackSourceUri;
+            _lastPersistedPositionMilliseconds = snapshot.PositionMilliseconds;
+            _lastPersistedIsPlaying = snapshot.ShouldResumePlayback;
         }
 
         partial void OnSelectedTrackChanged(MusicTrack? oldValue, MusicTrack? newValue)
@@ -345,6 +394,8 @@ namespace Tunvix.PageModels
                 }
 
                 await _audioPlayerService.StopAsync();
+                ClearPersistedPlaybackState();
+                _hasPreparedTrack = false;
                 await _audioTrackRepository.ReplaceAllAsync(result.Tracks);
                 await LoadPlaylistAsync(preserveCurrentSelection: false);
 
@@ -388,6 +439,8 @@ namespace Tunvix.PageModels
 
             SelectedTrack = nextSelection;
             IsPlaying = false;
+            _hasPreparedTrack = false;
+            ResetPersistedPlaybackStateCache();
             _isUpdatingProgressFromPlayer = true;
             PlaybackProgress = 0;
             _isUpdatingProgressFromPlayer = false;
@@ -433,7 +486,9 @@ namespace Tunvix.PageModels
             _isUpdatingProgressFromPlayer = false;
 
             await _audioPlayerService.PlayAsync(track.SourceUri);
+            _hasPreparedTrack = true;
             IsPlaying = true;
+            PersistPlaybackState(force: true);
 
             OnPropertyChanged(nameof(CurrentPlaybackTime));
             OnPropertyChanged(nameof(TotalPlaybackTime));
@@ -504,6 +559,8 @@ namespace Tunvix.PageModels
 
                 OnPropertyChanged(nameof(CurrentPlaybackTime));
                 OnPropertyChanged(nameof(TotalPlaybackTime));
+
+                PersistPlaybackState();
             });
         }
 
@@ -565,6 +622,109 @@ namespace Tunvix.PageModels
                 .ToList();
 
             return candidates[_random.Next(candidates.Count)];
+        }
+
+        private async Task RestorePlaybackStateAsync()
+        {
+            if (Playlist.Count == 0)
+            {
+                ClearPersistedPlaybackState();
+                return;
+            }
+
+            var snapshot = _playbackStateService.Load();
+            if (snapshot is null)
+            {
+                return;
+            }
+
+            var track = Playlist.FirstOrDefault(candidate =>
+                string.Equals(candidate.SourceUri, snapshot.TrackSourceUri, StringComparison.Ordinal));
+
+            if (track is null
+                || !_playbackStateService.IsTrackAvailable(track.SourceUri, track.SourcePath))
+            {
+                ClearPersistedPlaybackState();
+                return;
+            }
+
+            _isRestoringPlaybackState = true;
+
+            try
+            {
+                await RestoreTrackAsync(track, snapshot);
+            }
+            catch
+            {
+                _hasPreparedTrack = false;
+                ClearPersistedPlaybackState();
+            }
+            finally
+            {
+                _isRestoringPlaybackState = false;
+            }
+        }
+
+        private async Task RestoreTrackAsync(MusicTrack track, PlaybackStateSnapshot snapshot)
+        {
+            var targetPosition = snapshot.PositionMilliseconds;
+            if (track.DurationMilliseconds > 0)
+            {
+                targetPosition = Math.Min(targetPosition, track.DurationMilliseconds);
+            }
+
+            SelectedTrack = track;
+            _currentDurationMilliseconds = track.DurationMilliseconds;
+            _isUpdatingProgressFromPlayer = true;
+            PlaybackProgress = track.DurationMilliseconds > 0
+                ? Math.Clamp((double)targetPosition / track.DurationMilliseconds, 0, 1)
+                : 0;
+            _isUpdatingProgressFromPlayer = false;
+
+            await _audioPlayerService.LoadAsync(track.SourceUri);
+
+            if (targetPosition > 0)
+            {
+                await _audioPlayerService.SeekAsync(TimeSpan.FromMilliseconds(targetPosition));
+            }
+
+            if (snapshot.ShouldResumePlayback)
+            {
+                await _audioPlayerService.ResumeAsync();
+            }
+
+            _hasPreparedTrack = true;
+            IsPlaying = snapshot.ShouldResumePlayback;
+
+            PersistPlaybackState(force: true);
+
+            OnPropertyChanged(nameof(CurrentPlaybackTime));
+            OnPropertyChanged(nameof(TotalPlaybackTime));
+        }
+
+        private long GetCurrentPositionMilliseconds()
+        {
+            var positionMilliseconds = (long)Math.Max(_audioPlayerService.Position.TotalMilliseconds, 0);
+            var durationMilliseconds = _audioPlayerService.Duration > TimeSpan.Zero
+                ? (long)_audioPlayerService.Duration.TotalMilliseconds
+                : _currentDurationMilliseconds;
+
+            return durationMilliseconds > 0
+                ? Math.Min(positionMilliseconds, durationMilliseconds)
+                : positionMilliseconds;
+        }
+
+        private void ClearPersistedPlaybackState()
+        {
+            _playbackStateService.Clear();
+            ResetPersistedPlaybackStateCache();
+        }
+
+        private void ResetPersistedPlaybackStateCache()
+        {
+            _lastPersistedSourceUri = null;
+            _lastPersistedPositionMilliseconds = -1;
+            _lastPersistedIsPlaying = null;
         }
 
         private static string FormatPlaybackTime(int totalSeconds)

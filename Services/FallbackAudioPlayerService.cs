@@ -4,13 +4,27 @@ namespace Tunvix.Services
     {
         public event EventHandler<AudioPlaybackStateChangedEventArgs>? PlaybackStateChanged;
 
-        public event EventHandler? PlaybackEnded;
+        public event EventHandler? PlaybackEnded
+        {
+            add { }
+            remove { }
+        }
 
         public bool IsPlaying { get; private set; }
 
         public TimeSpan Position { get; private set; }
 
         public TimeSpan Duration { get; private set; }
+
+        public Task LoadAsync(string sourceUri, CancellationToken cancellationToken = default)
+        {
+            IsPlaying = false;
+            Position = TimeSpan.Zero;
+            PlaybackStateChanged?.Invoke(
+                this,
+                new AudioPlaybackStateChangedEventArgs(IsPlaying, Position, Duration));
+            return Task.CompletedTask;
+        }
 
         public Task PlayAsync(string sourceUri, CancellationToken cancellationToken = default)
         {

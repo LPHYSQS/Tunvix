@@ -17,7 +17,8 @@ namespace Tunvix.Platforms.Android.Services
         public AndroidAudioPlayerService()
         {
             var context = global::Android.App.Application.Context;
-            _player = new ExoPlayerBuilder(context).Build();
+            _player = new ExoPlayerBuilder(context).Build()
+                ?? throw new InvalidOperationException("Unable to create the Android audio player.");
         }
 
         public event EventHandler<AudioPlaybackStateChangedEventArgs>? PlaybackStateChanged;
@@ -31,6 +32,18 @@ namespace Tunvix.Platforms.Android.Services
         public TimeSpan Duration => _player.Duration > 0
             ? TimeSpan.FromMilliseconds(_player.Duration)
             : TimeSpan.Zero;
+
+        public async Task LoadAsync(string sourceUri, CancellationToken cancellationToken = default)
+        {
+            await MainThread.InvokeOnMainThreadAsync(() =>
+            {
+                _player.SetMediaItem(MediaItem.FromUri(AndroidUri.Parse(sourceUri)));
+                _player.Prepare();
+                _player.Pause();
+                _playbackEndedRaised = false;
+                RaisePlaybackStateChanged();
+            });
+        }
 
         public async Task PlayAsync(string sourceUri, CancellationToken cancellationToken = default)
         {
