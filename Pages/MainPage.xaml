@@ -1,103 +1,291 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:pageModels="clr-namespace:Tunvix.PageModels"             
+             xmlns:f="clr-namespace:Fonts"
              xmlns:models="clr-namespace:Tunvix.Models"
-             xmlns:controls="clr-namespace:Tunvix.Pages.Controls"
-             xmlns:pullToRefresh="clr-namespace:Syncfusion.Maui.Toolkit.PullToRefresh;assembly=Syncfusion.Maui.Toolkit"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:pageModels="clr-namespace:Tunvix.PageModels"
              x:Class="Tunvix.Pages.MainPage"
              x:DataType="pageModels:MainPageModel"
-             x:Name="OverviewPage"
-             Title="{Binding Today}">
-
-    <ContentPage.Behaviors>
-        <toolkit:EventToCommandBehavior
-                BindingContext="{Binding Path=BindingContext, Source={x:Reference OverviewPage}, x:DataType=ContentPage}"
-                EventName="NavigatedTo"
-                Command="{Binding NavigatedToCommand}" />
-        <toolkit:EventToCommandBehavior
-                BindingContext="{Binding Path=BindingContext, Source={x:Reference OverviewPage}, x:DataType=ContentPage}"
-                EventName="NavigatedFrom"
-                Command="{Binding NavigatedFromCommand}" />
-        <toolkit:EventToCommandBehavior
-                BindingContext="{Binding Path=BindingContext, Source={x:Reference OverviewPage}, x:DataType=ContentPage}"
-                EventName="Appearing"                
-                Command="{Binding AppearingCommand}" />
-    </ContentPage.Behaviors>
+             x:Name="MainPageRoot"
+             Shell.NavBarIsVisible="False">
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <Color x:Key="PlayerCardTop">#1B1E26</Color>
+            <Color x:Key="PlayerCardBottom">#111318</Color>
+            <Color x:Key="ListCardBackground">#0F1116</Color>
+            <Color x:Key="ListItemBackground">#141821</Color>
+            <Color x:Key="ListItemActiveBackground">#1C222D</Color>
+            <Color x:Key="ListItemStroke">#1F2430</Color>
+            <Color x:Key="ListItemActiveStroke">#D96A47</Color>
+            <Color x:Key="PrimaryText">#F6F1EB</Color>
+            <Color x:Key="SecondaryText">#9CA6B7</Color>
+            <Color x:Key="TertiaryText">#6F7786</Color>
+            <Color x:Key="AccentOrange">#D96A47</Color>
+            <Color x:Key="AccentCream">#F7E6D6</Color>
+            <Color x:Key="ControlBackground">#232731</Color>
+            <Color x:Key="ControlStroke">#2E3440</Color>
+            <Color x:Key="VinylOuter">#0B0D11</Color>
+            <Color x:Key="VinylMid">#171A20</Color>
+            <Color x:Key="VinylInner">#252A35</Color>
+            <Color x:Key="VinylCenter">#D96A47</Color>
+
+            <Style x:Key="SectionEyebrowStyle" TargetType="Label">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="CharacterSpacing" Value="1.2" />
+                <Setter Property="TextColor" Value="{StaticResource SecondaryText}" />
+            </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid>
-        <pullToRefresh:SfPullToRefresh
-            IsRefreshing="{Binding IsRefreshing}"
-            RefreshCommand="{Binding RefreshCommand}">
-            <pullToRefresh:SfPullToRefresh.PullableContent>
-                <ScrollView>
-                    <Grid Padding="{StaticResource LayoutPadding}" RowSpacing="{StaticResource LayoutSpacing}">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+    <ContentPage.Background>
+        <LinearGradientBrush EndPoint="0.9,1">
+            <GradientStop Color="#090A0D" Offset="0.0" />
+            <GradientStop Color="#141821" Offset="0.45" />
+            <GradientStop Color="#090A0D" Offset="1.0" />
+        </LinearGradientBrush>
+    </ContentPage.Background>
 
-                        <Label Grid.Row="0" Text="Task Categories" Style="{StaticResource Title2}" SemanticProperties.HeadingLevel="Level1"/>
-                        <controls:CategoryChart Grid.Row="1" />
-                        <Label Grid.Row="2" Text="Projects" Style="{StaticResource Title2}" SemanticProperties.HeadingLevel="Level1"/>
-                        <CollectionView Grid.Row="3" ItemsSource="{Binding Projects}"
-                                        Margin="-7.5,0"
-                                        MinimumHeightRequest="250"
-                                        x:Name="ProjectsCollectionView"
-                                        SelectionMode="Single"
-                                        SelectedItem="{Binding SelectedProject}"
-                                        SelectionChangedCommand="{Binding NavigateToProjectCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}"
-                                        SelectionChangedCommandParameter="{Binding SelectedProject}">
-                            <CollectionView.ItemsLayout>
-                                <LinearItemsLayout Orientation="Horizontal" ItemSpacing="7.5"/>
-                            </CollectionView.ItemsLayout>
-                            <CollectionView.ItemTemplate>
-                                <DataTemplate x:DataType="models:Project">
-                                    <controls:ProjectCardView WidthRequest="200" />
-                                </DataTemplate>
-                            </CollectionView.ItemTemplate>
-                        </CollectionView>
-                        <Grid Grid.Row="4" MinimumHeightRequest="44">
-                            <Label Text="Tasks" Style="{StaticResource Title2}" VerticalOptions="Center" SemanticProperties.HeadingLevel="Level1"/>
-                            <ImageButton 
-                                Source="{StaticResource IconClean}"
-                                HorizontalOptions="End"
-                                VerticalOptions="Center"
-                                Aspect="Center"
-                                HeightRequest="44"
-                                WidthRequest="44"
-                                IsVisible="{Binding HasCompletedTasks}"
-                                Command="{Binding CleanTasksCommand}"
-                                SemanticProperties.Description="Clean tasks" />
+    <Grid Padding="22,20,22,24" RowSpacing="18" RowDefinitions="Auto,*">
+        <Border Grid.Row="0"
+                Padding="20,20,20,20"
+                Stroke="{StaticResource ControlStroke}"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 34">
+            <Border.Background>
+                <LinearGradientBrush EndPoint="1,1">
+                    <GradientStop Color="{StaticResource PlayerCardTop}" Offset="0.0" />
+                    <GradientStop Color="{StaticResource PlayerCardBottom}" Offset="1.0" />
+                </LinearGradientBrush>
+            </Border.Background>
+
+            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="18">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="{Binding NowPlayingLabel}"
+                           Style="{StaticResource SectionEyebrowStyle}"
+                           HorizontalTextAlignment="Center" />
+                    <Label Text="{Binding CurrentTrackTitle}"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{StaticResource PrimaryText}" />
+                    <Label Text="{Binding CurrentTrackArtist}"
+                           FontSize="14"
+                           LineBreakMode="TailTruncation"
+                           MaxLines="1"
+                           HorizontalTextAlignment="Center"
+                           TextColor="{StaticResource SecondaryText}" />
+                </VerticalStackLayout>
+
+                <Grid Grid.Row="1"
+                      HorizontalOptions="Center"
+                      VerticalOptions="Center"
+                      Margin="0,2,0,0">
+                    <Border WidthRequest="186"
+                            HeightRequest="186"
+                            Background="{StaticResource VinylOuter}"
+                            Stroke="#2A303A"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 93">
+                        <Grid>
+                            <Border WidthRequest="146"
+                                    HeightRequest="146"
+                                    Background="{StaticResource VinylMid}"
+                                    Stroke="#343B47"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 73"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center" />
+                            <Border WidthRequest="92"
+                                    HeightRequest="92"
+                                    Background="{StaticResource VinylInner}"
+                                    Stroke="#3A4453"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 46"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center" />
+                            <Border WidthRequest="34"
+                                    HeightRequest="34"
+                                    Background="{StaticResource VinylCenter}"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 17"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center" />
+                            <Border WidthRequest="12"
+                                    HeightRequest="12"
+                                    Background="{StaticResource AccentCream}"
+                                    StrokeThickness="0"
+                                    StrokeShape="RoundRectangle 6"
+                                    HorizontalOptions="Center"
+                                    VerticalOptions="Center" />
                         </Grid>
-                        <VerticalStackLayout Grid.Row="5" Spacing="15"
-                            BindableLayout.ItemsSource="{Binding Tasks}">
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate>
-                                    <controls:TaskView TaskCompletedCommand="{Binding TaskCompletedCommand, Source={RelativeSource AncestorType={x:Type pageModels:MainPageModel}}, x:DataType=pageModels:MainPageModel}" />
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </VerticalStackLayout>
-                    </Grid>
-                </ScrollView>
-            </pullToRefresh:SfPullToRefresh.PullableContent>
-        </pullToRefresh:SfPullToRefresh>
+                    </Border>
+                </Grid>
 
-        <controls:AddButton 
-            IsEnabled="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
-            Command="{Binding AddTaskCommand}"
-            ToolTipProperties.Text="Add task"
-            SemanticProperties.Description="Add task" />
+                <HorizontalStackLayout Grid.Row="2"
+                                       Spacing="20"
+                                       HorizontalOptions="Center">
+                    <Border WidthRequest="58"
+                            HeightRequest="58"
+                            Background="{StaticResource ControlBackground}"
+                            Stroke="{StaticResource ControlStroke}"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 29"
+                            SemanticProperties.Description="&#x4E0A;&#x4E00;&#x66F2;">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding PreviousTrackCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{x:Static f:FluentUI.previous_24_regular}"
+                               FontFamily="{x:Static f:FluentUI.FontFamily}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               FontSize="24"
+                               TextColor="{StaticResource PrimaryText}" />
+                    </Border>
+
+                    <Border WidthRequest="74"
+                            HeightRequest="74"
+                            Background="{StaticResource AccentOrange}"
+                            StrokeThickness="0"
+                            StrokeShape="RoundRectangle 37"
+                            SemanticProperties.Description="&#x64AD;&#x653E;&#x6216;&#x6682;&#x505C;">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding TogglePlaybackCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{Binding PlayPauseGlyph}"
+                               FontFamily="{x:Static f:FluentUI.FontFamily}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               FontSize="30"
+                               TextColor="{StaticResource AccentCream}" />
+                    </Border>
+
+                    <Border WidthRequest="58"
+                            HeightRequest="58"
+                            Background="{StaticResource ControlBackground}"
+                            Stroke="{StaticResource ControlStroke}"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 29"
+                            SemanticProperties.Description="&#x4E0B;&#x4E00;&#x66F2;">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NextTrackCommand}" />
+                        </Border.GestureRecognizers>
+                        <Label Text="{x:Static f:FluentUI.next_24_regular}"
+                               FontFamily="{x:Static f:FluentUI.FontFamily}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               FontSize="24"
+                               TextColor="{StaticResource PrimaryText}" />
+                    </Border>
+                </HorizontalStackLayout>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1"
+                Padding="18,18,18,8"
+                Background="{StaticResource ListCardBackground}"
+                Stroke="{StaticResource ControlStroke}"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 34">
+            <Grid RowDefinitions="Auto,*" RowSpacing="16">
+                <Grid ColumnDefinitions="*,Auto">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="&#x64AD;&#x653E;&#x5217;&#x8868;"
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               TextColor="{StaticResource PrimaryText}" />
+                        <Label Text="{Binding PlaylistSummary}"
+                               FontSize="13"
+                               TextColor="{StaticResource SecondaryText}" />
+                    </VerticalStackLayout>
+
+                    <Label Grid.Column="1"
+                           Text="{x:Static f:FluentUI.music_note_2_20_regular}"
+                           FontFamily="{x:Static f:FluentUI.FontFamily}"
+                           FontSize="24"
+                           TextColor="{StaticResource TertiaryText}"
+                           VerticalOptions="Center" />
+                </Grid>
+
+                <CollectionView Grid.Row="1"
+                                ItemsSource="{Binding Playlist}"
+                                SelectionMode="None"
+                                Margin="0,0,0,8">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:MusicTrack">
+                            <Border Margin="0,0,0,12"
+                                    Padding="16,14"
+                                    Background="{StaticResource ListItemBackground}"
+                                    Stroke="{StaticResource ListItemStroke}"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 24">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.SelectTrackCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border"
+                                                 Binding="{Binding IsCurrent}"
+                                                 Value="True">
+                                        <Setter Property="Background" Value="{StaticResource ListItemActiveBackground}" />
+                                        <Setter Property="Stroke" Value="{StaticResource ListItemActiveStroke}" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+
+                                <Grid ColumnDefinitions="54,*,Auto" ColumnSpacing="14">
+                                    <Border WidthRequest="54"
+                                            HeightRequest="54"
+                                            Background="{Binding AccentColor}"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 18">
+                                        <Label Text="{Binding Badge}"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"
+                                               FontSize="16"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource AccentCream}" />
+                                    </Border>
+
+                                    <VerticalStackLayout Grid.Column="1"
+                                                         Spacing="4"
+                                                         VerticalOptions="Center">
+                                        <Label Text="{Binding Title}"
+                                               FontSize="17"
+                                               FontAttributes="Bold"
+                                               TextColor="{StaticResource PrimaryText}" />
+                                        <Label Text="{Binding Artist}"
+                                               FontSize="13"
+                                               TextColor="{StaticResource SecondaryText}" />
+                                    </VerticalStackLayout>
+
+                                    <VerticalStackLayout Grid.Column="2"
+                                                         Spacing="6"
+                                                         VerticalOptions="Center"
+                                                         HorizontalOptions="End">
+                                        <Label Text="{Binding Duration}"
+                                               FontSize="12"
+                                               TextColor="{StaticResource SecondaryText}"
+                                               HorizontalTextAlignment="End" />
+                                        <Border Padding="10,4"
+                                                Background="#252C37"
+                                                StrokeThickness="0"
+                                                StrokeShape="RoundRectangle 999"
+                                                IsVisible="{Binding IsCurrent}">
+                                            <Label Text="&#x5F53;&#x524D;&#x64AD;&#x653E;"
+                                                   FontSize="11"
+                                                   TextColor="{StaticResource AccentCream}" />
+                                        </Border>
+                                    </VerticalStackLayout>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </Grid>
+        </Border>
     </Grid>
 </ContentPage>

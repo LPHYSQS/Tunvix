@@ -1,177 +1,159 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Fonts;
 using Tunvix.Models;
 
 namespace Tunvix.PageModels
 {
-    public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
+    public partial class MainPageModel : ObservableObject
     {
-        private bool _isNavigatedTo;
-        private bool _dataLoaded;
-        private readonly ProjectRepository _projectRepository;
-        private readonly TaskRepository _taskRepository;
-        private readonly CategoryRepository _categoryRepository;
-        private readonly ModalErrorHandler _errorHandler;
-        private readonly SeedDataService _seedDataService;
+        [ObservableProperty]
+        private ObservableCollection<MusicTrack> _playlist = new();
 
         [ObservableProperty]
-        private List<CategoryChartData> _todoCategoryData = [];
+        private MusicTrack? _selectedTrack;
 
         [ObservableProperty]
-        private List<Brush> _todoCategoryColors = [];
+        private bool _isPlaying = true;
 
-        [ObservableProperty]
-        private List<ProjectTask> _tasks = [];
+        public string PlayPauseGlyph => IsPlaying
+            ? FluentUI.pause_24_regular
+            : FluentUI.play_24_regular;
 
-        [ObservableProperty]
-        private List<Project> _projects = [];
+        public string NowPlayingLabel => IsPlaying ? "\u6b63\u5728\u64ad\u653e" : "\u5df2\u6682\u505c";
 
-        [ObservableProperty]
-        bool _isBusy;
+        public string PlaylistSummary => $"\u5171 {Playlist.Count} \u9996\u6b4c\u66f2";
 
-        [ObservableProperty]
-        bool _isRefreshing;
-
-        [ObservableProperty]
-        private string _today = DateTime.Now.ToString("dddd, MMM d");
-
-        [ObservableProperty]
-        private Project? selectedProject;
-
-        public bool HasCompletedTasks
-            => Tasks?.Any(t => t.IsCompleted) ?? false;
-
-        public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
-            TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler)
+        public MainPageModel()
         {
-            _projectRepository = projectRepository;
-            _taskRepository = taskRepository;
-            _categoryRepository = categoryRepository;
-            _errorHandler = errorHandler;
-            _seedDataService = seedDataService;
-        }
-
-        private async Task LoadData()
-        {
-            try
+            Playlist = new ObservableCollection<MusicTrack>
             {
-                IsBusy = true;
-
-                Projects = await _projectRepository.ListAsync();
-
-                var chartData = new List<CategoryChartData>();
-                var chartColors = new List<Brush>();
-
-                var categories = await _categoryRepository.ListAsync();
-                foreach (var category in categories)
+                new MusicTrack
                 {
-                    chartColors.Add(category.ColorBrush);
-
-                    var ps = Projects.Where(p => p.CategoryID == category.ID).ToList();
-                    int tasksCount = ps.SelectMany(p => p.Tasks).Count();
-
-                    chartData.Add(new(category.Title, tasksCount));
+                    Title = "\u4e91\u6f6e\u5e8f\u66f2",
+                    Artist = "\u6d41\u98ce\u5de5\u4f5c\u5ba4",
+                    Duration = "03:42",
+                    Badge = "01",
+                    AccentColor = Color.FromArgb("#D96A47")
+                },
+                new MusicTrack
+                {
+                    Title = "\u591c\u822a\u9891\u7387",
+                    Artist = "\u6781\u5730\u56de\u58f0",
+                    Duration = "04:18",
+                    Badge = "02",
+                    AccentColor = Color.FromArgb("#4D7CFE")
+                },
+                new MusicTrack
+                {
+                    Title = "\u6d77\u98ce\u843d\u9488",
+                    Artist = "\u84dd\u6e2f\u4e50\u961f",
+                    Duration = "03:56",
+                    Badge = "03",
+                    AccentColor = Color.FromArgb("#2AA889")
+                },
+                new MusicTrack
+                {
+                    Title = "\u6781\u663c\u56de\u54cd",
+                    Artist = "\u5317\u5883\u78c1\u5e26",
+                    Duration = "05:07",
+                    Badge = "04",
+                    AccentColor = Color.FromArgb("#A56CFF")
+                },
+                new MusicTrack
+                {
+                    Title = "\u5c71\u8c37\u6162\u677f",
+                    Artist = "\u82d4\u75d5\u7406\u8bba",
+                    Duration = "02:51",
+                    Badge = "05",
+                    AccentColor = Color.FromArgb("#F2B94B")
+                },
+                new MusicTrack
+                {
+                    Title = "\u957f\u591c\u661f\u56fe",
+                    Artist = "\u6d41\u660e\u8f68\u8ff9",
+                    Duration = "04:40",
+                    Badge = "06",
+                    AccentColor = Color.FromArgb("#F06D8F")
                 }
+            };
 
-                TodoCategoryData = chartData;
-                TodoCategoryColors = chartColors;
-
-                Tasks = await _taskRepository.ListAsync();
-            }
-            finally
-            {
-                IsBusy = false;
-                OnPropertyChanged(nameof(HasCompletedTasks));
-            }
+            SelectedTrack = Playlist.FirstOrDefault();
         }
 
-        private async Task InitData(SeedDataService seedDataService)
+        partial void OnSelectedTrackChanged(MusicTrack? oldValue, MusicTrack? newValue)
         {
-            bool isSeeded = Preferences.Default.ContainsKey("is_seeded");
-
-            if (!isSeeded)
+            if (oldValue is not null)
             {
-                await seedDataService.LoadSeedDataAsync();
+                oldValue.IsCurrent = false;
             }
 
-            Preferences.Default.Set("is_seeded", true);
-            await Refresh();
+            if (newValue is not null)
+            {
+                newValue.IsCurrent = true;
+                IsPlaying = true;
+            }
+
+            OnPropertyChanged(nameof(CurrentTrackTitle));
+            OnPropertyChanged(nameof(CurrentTrackArtist));
         }
 
-        [RelayCommand]
-        private async Task Refresh()
+        partial void OnIsPlayingChanged(bool value)
         {
-            try
-            {
-                IsRefreshing = true;
-                await LoadData();
-            }
-            catch (Exception e)
-            {
-                _errorHandler.HandleError(e);
-            }
-            finally
-            {
-                IsRefreshing = false;
-            }
+            OnPropertyChanged(nameof(PlayPauseGlyph));
+            OnPropertyChanged(nameof(NowPlayingLabel));
         }
 
-        [RelayCommand]
-        private void NavigatedTo() =>
-            _isNavigatedTo = true;
+        public string CurrentTrackTitle => SelectedTrack?.Title ?? "\u672a\u9009\u62e9\u6b4c\u66f2";
+
+        public string CurrentTrackArtist => SelectedTrack?.Artist ?? "\u7b49\u5f85\u64ad\u653e\u5217\u8868";
 
         [RelayCommand]
-        private void NavigatedFrom() =>
-            _isNavigatedTo = false;
+        private void TogglePlayback() =>
+            IsPlaying = !IsPlaying;
 
         [RelayCommand]
-        private async Task Appearing()
+        private void SelectTrack(MusicTrack? track)
         {
-            if (!_dataLoaded)
+            if (track is null)
             {
-                await InitData(_seedDataService);
-                _dataLoaded = true;
-                await Refresh();
+                return;
             }
-            // This means we are being navigated to
-            else if (!_isNavigatedTo)
-            {
-                await Refresh();
-            }
+
+            SelectedTrack = track;
         }
 
         [RelayCommand]
-        private Task TaskCompleted(ProjectTask task)
+        private void PreviousTrack() =>
+            MoveSelection(-1);
+
+        [RelayCommand]
+        private void NextTrack() =>
+            MoveSelection(1);
+
+        private void MoveSelection(int offset)
         {
-            OnPropertyChanged(nameof(HasCompletedTasks));
-            return _taskRepository.SaveItemAsync(task);
-        }
-
-        [RelayCommand]
-        private Task AddTask()
-            => Shell.Current.GoToAsync($"task");
-
-        [RelayCommand]
-        private Task? NavigateToProject(Project project)
-            => project is null ? null : Shell.Current.GoToAsync($"project?id={project.ID}");
-
-        [RelayCommand]
-        private Task NavigateToTask(ProjectTask task)
-            => Shell.Current.GoToAsync($"task?id={task.ID}");
-
-        [RelayCommand]
-        private async Task CleanTasks()
-        {
-            var completedTasks = Tasks.Where(t => t.IsCompleted).ToList();
-            foreach (var task in completedTasks)
+            if (Playlist.Count == 0)
             {
-                await _taskRepository.DeleteItemAsync(task);
-                Tasks.Remove(task);
+                return;
             }
 
-            OnPropertyChanged(nameof(HasCompletedTasks));
-            Tasks = new(Tasks);
-            await AppShell.DisplayToastAsync("All cleaned up!");
+            if (SelectedTrack is null)
+            {
+                SelectedTrack = Playlist[0];
+                return;
+            }
+
+            var currentIndex = Playlist.IndexOf(SelectedTrack);
+            if (currentIndex < 0)
+            {
+                SelectedTrack = Playlist[0];
+                return;
+            }
+
+            var nextIndex = (currentIndex + offset + Playlist.Count) % Playlist.Count;
+            SelectedTrack = Playlist[nextIndex];
         }
     }
 }
