@@ -5,6 +5,9 @@ namespace Tunvix.Models
     public partial class MusicTrack : ObservableObject
     {
         [ObservableProperty]
+        private int _id;
+
+        [ObservableProperty]
         private string _title = string.Empty;
 
         [ObservableProperty]
@@ -15,6 +18,18 @@ namespace Tunvix.Models
 
         [ObservableProperty]
         private string _badge = string.Empty;
+
+        [ObservableProperty]
+        private string _sourceUri = string.Empty;
+
+        [ObservableProperty]
+        private string _sourcePath = string.Empty;
+
+        [ObservableProperty]
+        private string _mimeType = string.Empty;
+
+        [ObservableProperty]
+        private long _durationMilliseconds;
 
         [ObservableProperty]
         private Color _accentColor = Colors.Transparent;

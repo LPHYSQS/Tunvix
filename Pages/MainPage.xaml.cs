@@ -19,8 +19,9 @@ namespace Tunvix.Pages
             _model.PropertyChanged += OnModelPropertyChanged;
         }
 
-        private void OnPageLoaded(object? sender, EventArgs e)
+        private async void OnPageLoaded(object? sender, EventArgs e)
         {
+            await _model.InitializeAsync();
             UpdateDrawerMetrics();
             InitializeDrawerVisualState();
         }

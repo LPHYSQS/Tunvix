@@ -1,6 +1,9 @@
-﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using Syncfusion.Maui.Toolkit.Hosting;
+#if ANDROID
+using Tunvix.Platforms.Android.Services;
+#endif
 
 namespace Tunvix
 {
@@ -16,18 +19,18 @@ namespace Tunvix
                 .ConfigureMauiHandlers(handlers =>
                 {
 #if WINDOWS
-    				Microsoft.Maui.Controls.Handlers.Items.CollectionViewHandler.Mapper.AppendToMapping("KeyboardAccessibleCollectionView", (handler, view) =>
-    				{
-    					handler.PlatformView.SingleSelectionFollowsFocus = false;
-    				});
+                    Microsoft.Maui.Controls.Handlers.Items.CollectionViewHandler.Mapper.AppendToMapping("KeyboardAccessibleCollectionView", (handler, view) =>
+                    {
+                        handler.PlatformView.SingleSelectionFollowsFocus = false;
+                    });
 
-    				Microsoft.Maui.Handlers.ContentViewHandler.Mapper.AppendToMapping(nameof(Pages.Controls.CategoryChart), (handler, view) =>
-    				{
-    					if (view is Pages.Controls.CategoryChart && handler.PlatformView is Microsoft.Maui.Platform.ContentPanel contentPanel)
-    					{
-    						contentPanel.IsTabStop = true;
-    					}
-    				});
+                    Microsoft.Maui.Handlers.ContentViewHandler.Mapper.AppendToMapping(nameof(Pages.Controls.CategoryChart), (handler, view) =>
+                    {
+                        if (view is Pages.Controls.CategoryChart && handler.PlatformView is Microsoft.Maui.Platform.ContentPanel contentPanel)
+                        {
+                            contentPanel.IsTabStop = true;
+                        }
+                    });
 #endif
                 })
                 .ConfigureFonts(fonts =>
@@ -39,18 +42,30 @@ namespace Tunvix
                 });
 
 #if DEBUG
-    		builder.Logging.AddDebug();
-    		builder.Services.AddLogging(configure => configure.AddDebug());
+            builder.Logging.AddDebug();
+            builder.Services.AddLogging(configure => configure.AddDebug());
 #endif
 
             builder.Services.AddSingleton<ProjectRepository>();
             builder.Services.AddSingleton<TaskRepository>();
             builder.Services.AddSingleton<CategoryRepository>();
             builder.Services.AddSingleton<TagRepository>();
+            builder.Services.AddSingleton<AudioTrackRepository>();
             builder.Services.AddSingleton<SeedDataService>();
             builder.Services.AddSingleton<ModalErrorHandler>();
+            builder.Services.AddSingleton<IErrorHandler>(serviceProvider => serviceProvider.GetRequiredService<ModalErrorHandler>());
             builder.Services.AddSingleton<ThemeService>();
             builder.Services.AddSingleton<PlaybackModeService>();
+
+#if ANDROID
+            builder.Services.AddSingleton<IAndroidFolderPickerService, AndroidFolderPickerService>();
+            builder.Services.AddSingleton<IAudioLibraryImportService, AndroidAudioLibraryImportService>();
+            builder.Services.AddSingleton<IAudioPlayerService, AndroidAudioPlayerService>();
+#else
+            builder.Services.AddSingleton<IAudioLibraryImportService, FallbackAudioLibraryImportService>();
+            builder.Services.AddSingleton<IAudioPlayerService, FallbackAudioPlayerService>();
+#endif
+
             builder.Services.AddSingleton<MainPageModel>();
             builder.Services.AddSingleton<ProjectListPageModel>();
             builder.Services.AddSingleton<ManageMetaPageModel>();

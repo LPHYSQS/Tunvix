@@ -128,7 +128,7 @@
                         <Border WidthRequest="46"
                                 HeightRequest="46"
                                 Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
-                                Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
+                                Stroke="{StaticResource AccentOrange}"
                                 StrokeThickness="1"
                                 StrokeShape="RoundRectangle 23"
                                 HorizontalOptions="Start"
@@ -169,7 +169,7 @@
                                 WidthRequest="46"
                                 HeightRequest="46"
                                 Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
-                                Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
+                                Stroke="{StaticResource AccentOrange}"
                                 StrokeThickness="1"
                                 StrokeShape="RoundRectangle 23"
                                 HorizontalOptions="End"
@@ -417,18 +417,63 @@
                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                         </VerticalStackLayout>
 
-                        <Label Grid.Column="2"
-                               Text="{x:Static f:FluentUI.music_note_2_20_regular}"
-                               FontFamily="{x:Static f:FluentUI.FontFamily}"
-                               FontSize="24"
-                               TextColor="{AppThemeBinding Light={StaticResource LightTertiaryText}, Dark={StaticResource DarkTertiaryText}}"
-                               VerticalOptions="Center" />
+                        <Border Grid.Column="2"
+                                WidthRequest="42"
+                                HeightRequest="42"
+                                Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                                Stroke="{StaticResource AccentOrange}"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 21"
+                                SemanticProperties.Description="导入音频">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenImportOptionsCommand}" />
+                            </Border.GestureRecognizers>
+                            <Grid WidthRequest="18"
+                                  HeightRequest="18"
+                                  HorizontalOptions="Center"
+                                  VerticalOptions="Center">
+                                <BoxView HeightRequest="2"
+                                         WidthRequest="16"
+                                         CornerRadius="1"
+                                         HorizontalOptions="Center"
+                                         VerticalOptions="Center"
+                                         Color="{StaticResource AccentOrange}" />
+                                <BoxView HeightRequest="16"
+                                         WidthRequest="2"
+                                         CornerRadius="1"
+                                         HorizontalOptions="Center"
+                                         VerticalOptions="Center"
+                                         Color="{StaticResource AccentOrange}" />
+                            </Grid>
+                        </Border>
                     </Grid>
 
                     <CollectionView Grid.Row="1"
                                     ItemsSource="{Binding Playlist}"
                                     SelectionMode="None"
                                     Margin="0,0,0,8">
+                        <CollectionView.EmptyView>
+                            <VerticalStackLayout Spacing="10"
+                                                 Padding="18,40,18,0"
+                                                 HorizontalOptions="Center"
+                                                 VerticalOptions="Center">
+                                <Label Text="{x:Static f:FluentUI.music_note_2_20_regular}"
+                                       FontFamily="{x:Static f:FluentUI.FontFamily}"
+                                       FontSize="34"
+                                       HorizontalOptions="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource LightTertiaryText}, Dark={StaticResource DarkTertiaryText}}" />
+                                <Label Text="{Binding EmptyPlaylistTitle}"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       HorizontalTextAlignment="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                                <Label Text="{Binding EmptyPlaylistSubtitle}"
+                                       FontSize="13"
+                                       HorizontalTextAlignment="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                            </VerticalStackLayout>
+                        </CollectionView.EmptyView>
+
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:MusicTrack">
                                 <Border Margin="0,0,8,12"
@@ -504,6 +549,124 @@
                             </DataTemplate>
                         </CollectionView.ItemTemplate>
                     </CollectionView>
+
+                    <Grid Grid.RowSpan="2"
+                          IsVisible="{Binding IsImportOptionsOpen}"
+                          InputTransparent="False">
+                        <BoxView BackgroundColor="Transparent">
+                            <BoxView.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding CloseImportOptionsCommand}" />
+                            </BoxView.GestureRecognizers>
+                        </BoxView>
+
+                        <Border Padding="16"
+                                Margin="14"
+                                Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                                Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 26"
+                                VerticalOptions="Center">
+                            <VerticalStackLayout Spacing="14">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="导入音频"
+                                           FontSize="20"
+                                           FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                                    <Label Text="应用只会建立音频索引表，记录原始路径与播放地址，不会复制你的音频文件。"
+                                           FontSize="13"
+                                           TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                                </VerticalStackLayout>
+
+                                <Border Padding="14,12"
+                                        Background="{AppThemeBinding Light={StaticResource LightListItemBackground}, Dark={StaticResource DarkListItemBackground}}"
+                                        Stroke="{AppThemeBinding Light={StaticResource LightListItemStroke}, Dark={StaticResource DarkListItemStroke}}"
+                                        StrokeThickness="1"
+                                        StrokeShape="RoundRectangle 20">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding ImportAllDeviceAudioCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*"
+                                          ColumnSpacing="12">
+                                        <Label Text="{x:Static f:FluentUI.arrow_upload_24_regular}"
+                                               FontFamily="{x:Static f:FluentUI.FontFamily}"
+                                               FontSize="22"
+                                               VerticalOptions="Center"
+                                               TextColor="{StaticResource AccentOrange}" />
+                                        <VerticalStackLayout Grid.Column="1"
+                                                             Spacing="3">
+                                            <Label Text="加载本设备全部音频"
+                                                   FontSize="15"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                                            <Label Text="读取系统媒体库，导入 Media3 可播放的本机音频索引。"
+                                                   FontSize="12"
+                                                   TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+
+                                <Border Padding="14,12"
+                                        Background="{AppThemeBinding Light={StaticResource LightListItemBackground}, Dark={StaticResource DarkListItemBackground}}"
+                                        Stroke="{AppThemeBinding Light={StaticResource LightListItemStroke}, Dark={StaticResource DarkListItemStroke}}"
+                                        StrokeThickness="1"
+                                        StrokeShape="RoundRectangle 20">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding ImportFolderAudioCommand}" />
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*"
+                                          ColumnSpacing="12">
+                                        <Label Text="{x:Static f:FluentUI.folder_add_24_regular}"
+                                               FontFamily="{x:Static f:FluentUI.FontFamily}"
+                                               FontSize="22"
+                                               VerticalOptions="Center"
+                                               TextColor="{StaticResource AccentOrange}" />
+                                        <VerticalStackLayout Grid.Column="1"
+                                                             Spacing="3">
+                                            <Label Text="加载指定文件夹音频"
+                                                   FontSize="15"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                                            <Label Text="通过系统授权选择文件夹，只导入该目录下可识别的音频索引。"
+                                                   FontSize="12"
+                                                   TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                                        </VerticalStackLayout>
+                                    </Grid>
+                                </Border>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.RowSpan="2"
+                          IsVisible="{Binding IsImportingLibrary}"
+                          InputTransparent="False">
+                        <BoxView BackgroundColor="#9A090A0D" />
+
+                        <Border Padding="18"
+                                Margin="18"
+                                Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                                Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 26"
+                                VerticalOptions="Center">
+                            <VerticalStackLayout Spacing="14">
+                                <ActivityIndicator IsRunning="True"
+                                                   Color="{StaticResource AccentOrange}"
+                                                   HorizontalOptions="Center" />
+                                <Label Text="正在建立音频索引"
+                                       FontSize="18"
+                                       FontAttributes="Bold"
+                                       HorizontalTextAlignment="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                                <Label Text="{Binding ImportProgressLabel}"
+                                       FontSize="13"
+                                       HorizontalTextAlignment="Center"
+                                       TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                                <ProgressBar Progress="{Binding ImportProgressValue}"
+                                             ProgressColor="{StaticResource AccentOrange}"
+                                             BackgroundColor="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>

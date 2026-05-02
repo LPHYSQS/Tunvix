@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Fonts;
+using Microsoft.Maui.Dispatching;
+using Tunvix.Data;
 using Tunvix.Models;
 using Tunvix.Services;
 
@@ -9,8 +11,28 @@ namespace Tunvix.PageModels
 {
     public partial class MainPageModel : ObservableObject
     {
+        private static readonly string[] AccentPalette =
+        {
+            "#D96A47",
+            "#4D7CFE",
+            "#2AA889",
+            "#A56CFF",
+            "#F2B94B",
+            "#F06D8F"
+        };
+
         private readonly ThemeService _themeService;
         private readonly PlaybackModeService _playbackModeService;
+        private readonly AudioTrackRepository _audioTrackRepository;
+        private readonly IAudioLibraryImportService _audioLibraryImportService;
+        private readonly IAudioPlayerService _audioPlayerService;
+        private readonly IErrorHandler _errorHandler;
+        private readonly Random _random = new();
+
+        private bool _isInitialized;
+        private bool _isUpdatingProgressFromPlayer;
+        private bool _isHandlingPlaybackEnded;
+        private long _currentDurationMilliseconds;
 
         [ObservableProperty]
         private ObservableCollection<MusicTrack> _playlist = new();
@@ -19,16 +41,49 @@ namespace Tunvix.PageModels
         private MusicTrack? _selectedTrack;
 
         [ObservableProperty]
-        private bool _isPlaying = true;
+        private bool _isPlaying;
 
         [ObservableProperty]
-        private double _playbackProgress = 0.36;
+        private double _playbackProgress;
 
         [ObservableProperty]
         private bool _isPlaylistDrawerOpen;
 
         [ObservableProperty]
         private PlaybackMode _playbackMode = PlaybackMode.Sequential;
+
+        [ObservableProperty]
+        private bool _isImportOptionsOpen;
+
+        [ObservableProperty]
+        private bool _isImportingLibrary;
+
+        [ObservableProperty]
+        private double _importProgressValue;
+
+        [ObservableProperty]
+        private string _importProgressLabel = "\u51c6\u5907\u5bfc\u5165\u97f3\u9891";
+
+        public MainPageModel(
+            ThemeService themeService,
+            PlaybackModeService playbackModeService,
+            AudioTrackRepository audioTrackRepository,
+            IAudioLibraryImportService audioLibraryImportService,
+            IAudioPlayerService audioPlayerService,
+            IErrorHandler errorHandler)
+        {
+            _themeService = themeService;
+            _playbackModeService = playbackModeService;
+            _audioTrackRepository = audioTrackRepository;
+            _audioLibraryImportService = audioLibraryImportService;
+            _audioPlayerService = audioPlayerService;
+            _errorHandler = errorHandler;
+
+            PlaybackMode = _playbackModeService.GetStoredMode();
+
+            _audioPlayerService.PlaybackStateChanged += OnPlaybackStateChanged;
+            _audioPlayerService.PlaybackEnded += OnPlaybackEnded;
+        }
 
         public string PlayPauseGlyph => IsPlaying
             ? FluentUI.pause_24_regular
@@ -38,11 +93,25 @@ namespace Tunvix.PageModels
             ? "\u5207\u6362\u5230\u6d45\u8272\u4e3b\u9898"
             : "\u5207\u6362\u5230\u6df1\u8272\u4e3b\u9898";
 
-        public string NowPlayingLabel => IsPlaying ? "\u6b63\u5728\u64ad\u653e" : "\u5df2\u6682\u505c";
+        public string NowPlayingLabel => !HasTracks
+            ? "\u7b49\u5f85\u5bfc\u5165"
+            : IsPlaying
+                ? "\u6b63\u5728\u64ad\u653e"
+                : "\u5df2\u6682\u505c";
 
-        public string PlaylistSummary => $"\u5171 {Playlist.Count} \u9996\u6b4c\u66f2";
+        public string PlaylistSummary => Playlist.Count == 0
+            ? "\u8fd8\u6ca1\u6709\u5bfc\u5165\u6b4c\u66f2"
+            : $"\u5171 {Playlist.Count} \u9996\u6b4c\u66f2";
 
         public bool IsDarkTheme => _themeService.IsDarkTheme;
+
+        public bool HasTracks => Playlist.Count > 0;
+
+        public bool IsPlaylistEmpty => Playlist.Count == 0;
+
+        public string EmptyPlaylistTitle => "\u8fd8\u6ca1\u6709\u97f3\u9891";
+
+        public string EmptyPlaylistSubtitle => "\u70b9\u51fb\u53f3\u4e0a\u89d2\u52a0\u53f7\uff0c\u4ece\u672c\u673a\u6216\u6307\u5b9a\u6587\u4ef6\u5939\u5bfc\u5165";
 
         public string PlaybackModeLabel => PlaybackMode switch
         {
@@ -62,67 +131,25 @@ namespace Tunvix.PageModels
 
         public string PlaybackModeDescription => $"{PlaybackModeLabel}\uff0c\u70b9\u51fb\u5207\u6362";
 
-        public MainPageModel(
-            ThemeService themeService,
-            PlaybackModeService playbackModeService)
+        public string CurrentTrackTitle => SelectedTrack?.Title ?? "\u6682\u65e0\u6b4c\u66f2";
+
+        public string CurrentTrackArtist => SelectedTrack?.Artist ?? "\u8bf7\u5148\u5bfc\u5165\u97f3\u9891\u5230\u64ad\u653e\u5217\u8868";
+
+        public string CurrentPlaybackTime =>
+            FormatPlaybackTime((int)Math.Round(_audioPlayerService.Position.TotalSeconds));
+
+        public string TotalPlaybackTime =>
+            FormatPlaybackTime((int)Math.Round(TimeSpan.FromMilliseconds(_currentDurationMilliseconds).TotalSeconds));
+
+        public async Task InitializeAsync()
         {
-            _themeService = themeService;
-            _playbackModeService = playbackModeService;
-
-            Playlist = new ObservableCollection<MusicTrack>
+            if (_isInitialized)
             {
-                new MusicTrack
-                {
-                    Title = "\u4e91\u6f6e\u5e8f\u66f2",
-                    Artist = "\u6d41\u98ce\u5de5\u4f5c\u5ba4",
-                    Duration = "03:42",
-                    Badge = "01",
-                    AccentColor = Color.FromArgb("#D96A47")
-                },
-                new MusicTrack
-                {
-                    Title = "\u591c\u822a\u9891\u7387",
-                    Artist = "\u6781\u5730\u56de\u58f0",
-                    Duration = "04:18",
-                    Badge = "02",
-                    AccentColor = Color.FromArgb("#4D7CFE")
-                },
-                new MusicTrack
-                {
-                    Title = "\u6d77\u98ce\u843d\u9488",
-                    Artist = "\u84dd\u6e2f\u4e50\u961f",
-                    Duration = "03:56",
-                    Badge = "03",
-                    AccentColor = Color.FromArgb("#2AA889")
-                },
-                new MusicTrack
-                {
-                    Title = "\u6781\u663c\u56de\u54cd",
-                    Artist = "\u5317\u5883\u78c1\u5e26",
-                    Duration = "05:07",
-                    Badge = "04",
-                    AccentColor = Color.FromArgb("#A56CFF")
-                },
-                new MusicTrack
-                {
-                    Title = "\u5c71\u8c37\u6162\u677f",
-                    Artist = "\u82d4\u75d5\u7406\u8bba",
-                    Duration = "02:51",
-                    Badge = "05",
-                    AccentColor = Color.FromArgb("#F2B94B")
-                },
-                new MusicTrack
-                {
-                    Title = "\u957f\u591c\u661f\u56fe",
-                    Artist = "\u6d41\u660e\u8f68\u8ff9",
-                    Duration = "04:40",
-                    Badge = "06",
-                    AccentColor = Color.FromArgb("#F06D8F")
-                }
-            };
+                return;
+            }
 
-            SelectedTrack = Playlist.FirstOrDefault();
-            PlaybackMode = _playbackModeService.GetStoredMode();
+            await LoadPlaylistAsync(preserveCurrentSelection: false);
+            _isInitialized = true;
         }
 
         partial void OnSelectedTrackChanged(MusicTrack? oldValue, MusicTrack? newValue)
@@ -135,13 +162,18 @@ namespace Tunvix.PageModels
             if (newValue is not null)
             {
                 newValue.IsCurrent = true;
-                IsPlaying = true;
+                _currentDurationMilliseconds = newValue.DurationMilliseconds;
+            }
+            else
+            {
+                _currentDurationMilliseconds = 0;
             }
 
             OnPropertyChanged(nameof(CurrentTrackTitle));
             OnPropertyChanged(nameof(CurrentTrackArtist));
             OnPropertyChanged(nameof(CurrentPlaybackTime));
             OnPropertyChanged(nameof(TotalPlaybackTime));
+            OnPropertyChanged(nameof(NowPlayingLabel));
         }
 
         partial void OnIsPlayingChanged(bool value)
@@ -153,6 +185,15 @@ namespace Tunvix.PageModels
         partial void OnPlaybackProgressChanged(double value)
         {
             OnPropertyChanged(nameof(CurrentPlaybackTime));
+
+            if (_isUpdatingProgressFromPlayer
+                || SelectedTrack is null
+                || _currentDurationMilliseconds <= 0)
+            {
+                return;
+            }
+
+            _ = SeekToProgressAsync(value);
         }
 
         partial void OnPlaybackModeChanged(PlaybackMode value)
@@ -163,17 +204,83 @@ namespace Tunvix.PageModels
             OnPropertyChanged(nameof(PlaybackModeDescription));
         }
 
-        public string CurrentTrackTitle => SelectedTrack?.Title ?? "\u672a\u9009\u62e9\u6b4c\u66f2";
-
-        public string CurrentTrackArtist => SelectedTrack?.Artist ?? "\u7b49\u5f85\u64ad\u653e\u5217\u8868";
-
-        public string CurrentPlaybackTime => FormatPlaybackTime(GetCurrentPlaybackSeconds());
-
-        public string TotalPlaybackTime => SelectedTrack?.Duration ?? "00:00";
+        partial void OnIsImportingLibraryChanged(bool value)
+        {
+            if (!value)
+            {
+                ImportProgressValue = 0;
+            }
+        }
 
         [RelayCommand]
-        private void TogglePlayback() =>
-            IsPlaying = !IsPlaying;
+        private async Task TogglePlaybackAsync()
+        {
+            if (!HasTracks)
+            {
+                return;
+            }
+
+            if (SelectedTrack is null)
+            {
+                await PlayTrackAsync(Playlist[0]);
+                return;
+            }
+
+            if (IsPlaying)
+            {
+                await _audioPlayerService.PauseAsync();
+                IsPlaying = false;
+                return;
+            }
+
+            if (_audioPlayerService.Duration > TimeSpan.Zero
+                || _audioPlayerService.Position > TimeSpan.Zero)
+            {
+                await _audioPlayerService.ResumeAsync();
+                IsPlaying = true;
+                return;
+            }
+
+            await PlayTrackAsync(SelectedTrack);
+        }
+
+        [RelayCommand]
+        private void OpenPlaylistDrawer() =>
+            IsPlaylistDrawerOpen = true;
+
+        [RelayCommand]
+        private void ClosePlaylistDrawer()
+        {
+            IsPlaylistDrawerOpen = false;
+            IsImportOptionsOpen = false;
+        }
+
+        [RelayCommand]
+        private void ToggleTheme()
+        {
+            _themeService.ToggleTheme();
+            OnPropertyChanged(nameof(IsDarkTheme));
+            OnPropertyChanged(nameof(ThemeButtonDescription));
+        }
+
+        [RelayCommand]
+        private async Task SelectTrackAsync(MusicTrack? track)
+        {
+            if (track is null)
+            {
+                return;
+            }
+
+            await PlayTrackAsync(track);
+        }
+
+        [RelayCommand]
+        private async Task PreviousTrackAsync() =>
+            await MoveSelectionAsync(-1);
+
+        [RelayCommand]
+        private async Task NextTrackAsync() =>
+            await MoveSelectionAsync(1);
 
         [RelayCommand]
         private void CyclePlaybackMode()
@@ -187,41 +294,152 @@ namespace Tunvix.PageModels
         }
 
         [RelayCommand]
-        private void OpenPlaylistDrawer() =>
-            IsPlaylistDrawerOpen = true;
-
-        [RelayCommand]
-        private void ClosePlaylistDrawer() =>
-            IsPlaylistDrawerOpen = false;
-
-        [RelayCommand]
-        private void ToggleTheme()
+        private void OpenImportOptions()
         {
-            _themeService.ToggleTheme();
-            OnPropertyChanged(nameof(IsDarkTheme));
-            OnPropertyChanged(nameof(ThemeButtonDescription));
+            if (!IsImportingLibrary)
+            {
+                IsImportOptionsOpen = true;
+            }
         }
 
         [RelayCommand]
-        private void SelectTrack(MusicTrack? track)
+        private void CloseImportOptions() =>
+            IsImportOptionsOpen = false;
+
+        [RelayCommand]
+        private async Task ImportAllDeviceAudioAsync() =>
+            await ImportAudioAsync((progress, cancellationToken) =>
+                _audioLibraryImportService.ImportAllDeviceAudioAsync(progress, cancellationToken));
+
+        [RelayCommand]
+        private async Task ImportFolderAudioAsync() =>
+            await ImportAudioAsync((progress, cancellationToken) =>
+                _audioLibraryImportService.ImportFolderAudioAsync(progress, cancellationToken));
+
+        private async Task ImportAudioAsync(
+            Func<IProgress<AudioImportProgress>, CancellationToken, Task<AudioImportResult>> importOperation)
         {
-            if (track is null)
+            if (IsImportingLibrary)
+            {
+                return;
+            }
+
+            IsImportOptionsOpen = false;
+            IsImportingLibrary = true;
+            ImportProgressLabel = "\u6b63\u5728\u51c6\u5907\u5bfc\u5165...";
+
+            try
+            {
+                var progress = new Progress<AudioImportProgress>(update =>
+                {
+                    ImportProgressValue = Math.Clamp(update.Progress, 0, 1);
+                    ImportProgressLabel = update.Total > 0
+                        ? $"{update.Status} {update.Processed}/{update.Total}"
+                        : update.Status;
+                });
+
+                var result = await importOperation(progress, CancellationToken.None);
+                if (result.WasCancelled)
+                {
+                    return;
+                }
+
+                await _audioPlayerService.StopAsync();
+                await _audioTrackRepository.ReplaceAllAsync(result.Tracks);
+                await LoadPlaylistAsync(preserveCurrentSelection: false);
+
+                ImportProgressValue = 1;
+                ImportProgressLabel = result.Tracks.Count > 0
+                    ? $"\u5df2\u5bfc\u5165 {result.Tracks.Count} \u9996\u6b4c\u66f2"
+                    : "\u6ca1\u6709\u627e\u5230\u53ef\u5bfc\u5165\u7684\u97f3\u9891";
+
+                await Task.Delay(500);
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.HandleError(ex);
+            }
+            finally
+            {
+                IsImportingLibrary = false;
+            }
+        }
+
+        private async Task LoadPlaylistAsync(bool preserveCurrentSelection)
+        {
+            var currentSourceUri = preserveCurrentSelection
+                ? SelectedTrack?.SourceUri
+                : null;
+
+            var records = await _audioTrackRepository.ListAsync();
+            var tracks = records
+                .Select(CreateTrack)
+                .ToList();
+
+            Playlist.Clear();
+            foreach (var track in tracks)
+            {
+                Playlist.Add(track);
+            }
+
+            var nextSelection = !string.IsNullOrWhiteSpace(currentSourceUri)
+                ? Playlist.FirstOrDefault(track => track.SourceUri == currentSourceUri)
+                : Playlist.FirstOrDefault();
+
+            SelectedTrack = nextSelection;
+            IsPlaying = false;
+            _isUpdatingProgressFromPlayer = true;
+            PlaybackProgress = 0;
+            _isUpdatingProgressFromPlayer = false;
+
+            OnPropertyChanged(nameof(PlaylistSummary));
+            OnPropertyChanged(nameof(HasTracks));
+            OnPropertyChanged(nameof(IsPlaylistEmpty));
+            OnPropertyChanged(nameof(EmptyPlaylistTitle));
+            OnPropertyChanged(nameof(EmptyPlaylistSubtitle));
+            OnPropertyChanged(nameof(CurrentPlaybackTime));
+            OnPropertyChanged(nameof(TotalPlaybackTime));
+            OnPropertyChanged(nameof(NowPlayingLabel));
+        }
+
+        private MusicTrack CreateTrack(AudioTrackRecord record, int index)
+        {
+            return new MusicTrack
+            {
+                Id = record.ID,
+                Title = record.Title,
+                Artist = record.Artist,
+                DurationMilliseconds = record.DurationMilliseconds,
+                Duration = FormatPlaybackTime((int)Math.Round(TimeSpan.FromMilliseconds(record.DurationMilliseconds).TotalSeconds)),
+                Badge = $"{index + 1:00}",
+                AccentColor = Color.FromArgb(AccentPalette[index % AccentPalette.Length]),
+                SourceUri = record.SourceUri,
+                SourcePath = record.SourcePath,
+                MimeType = record.MimeType
+            };
+        }
+
+        private async Task PlayTrackAsync(MusicTrack track)
+        {
+            if (string.IsNullOrWhiteSpace(track.SourceUri))
             {
                 return;
             }
 
             SelectedTrack = track;
+            _currentDurationMilliseconds = track.DurationMilliseconds;
+            _isUpdatingProgressFromPlayer = true;
+            PlaybackProgress = 0;
+            _isUpdatingProgressFromPlayer = false;
+
+            await _audioPlayerService.PlayAsync(track.SourceUri);
+            IsPlaying = true;
+
+            OnPropertyChanged(nameof(CurrentPlaybackTime));
+            OnPropertyChanged(nameof(TotalPlaybackTime));
         }
 
-        [RelayCommand]
-        private void PreviousTrack() =>
-            MoveSelection(-1);
-
-        [RelayCommand]
-        private void NextTrack() =>
-            MoveSelection(1);
-
-        private void MoveSelection(int offset)
+        private async Task MoveSelectionAsync(int offset)
         {
             if (Playlist.Count == 0)
             {
@@ -230,47 +448,129 @@ namespace Tunvix.PageModels
 
             if (SelectedTrack is null)
             {
-                SelectedTrack = Playlist[0];
+                await PlayTrackAsync(Playlist[0]);
                 return;
             }
 
             var currentIndex = Playlist.IndexOf(SelectedTrack);
             if (currentIndex < 0)
             {
-                SelectedTrack = Playlist[0];
+                await PlayTrackAsync(Playlist[0]);
                 return;
             }
 
             var nextIndex = (currentIndex + offset + Playlist.Count) % Playlist.Count;
-            SelectedTrack = Playlist[nextIndex];
+            await PlayTrackAsync(Playlist[nextIndex]);
         }
 
-        private int GetCurrentPlaybackSeconds()
+        private async Task SeekToProgressAsync(double progress)
         {
-            var totalSeconds = GetTrackDurationSeconds();
-            var currentSeconds = (int)Math.Round(totalSeconds * PlaybackProgress);
-            return Math.Clamp(currentSeconds, 0, totalSeconds);
-        }
-
-        private int GetTrackDurationSeconds()
-        {
-            if (SelectedTrack?.Duration is null)
+            try
             {
-                return 0;
+                var target = TimeSpan.FromMilliseconds(_currentDurationMilliseconds * progress);
+                await _audioPlayerService.SeekAsync(target);
+            }
+            catch (Exception ex)
+            {
+                _errorHandler.HandleError(ex);
+            }
+        }
+
+        private void OnPlaybackStateChanged(object? sender, AudioPlaybackStateChangedEventArgs e)
+        {
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                IsPlaying = e.IsPlaying;
+
+                if (e.Duration > TimeSpan.Zero)
+                {
+                    _currentDurationMilliseconds = (long)e.Duration.TotalMilliseconds;
+
+                    if (SelectedTrack is not null
+                        && SelectedTrack.DurationMilliseconds != _currentDurationMilliseconds)
+                    {
+                        SelectedTrack.DurationMilliseconds = _currentDurationMilliseconds;
+                        SelectedTrack.Duration = FormatPlaybackTime((int)Math.Round(e.Duration.TotalSeconds));
+                    }
+                }
+
+                var ratio = e.Duration > TimeSpan.Zero
+                    ? e.Position.TotalMilliseconds / e.Duration.TotalMilliseconds
+                    : 0;
+
+                _isUpdatingProgressFromPlayer = true;
+                PlaybackProgress = Math.Clamp(ratio, 0, 1);
+                _isUpdatingProgressFromPlayer = false;
+
+                OnPropertyChanged(nameof(CurrentPlaybackTime));
+                OnPropertyChanged(nameof(TotalPlaybackTime));
+            });
+        }
+
+        private void OnPlaybackEnded(object? sender, EventArgs e)
+        {
+            _ = MainThread.InvokeOnMainThreadAsync(HandlePlaybackEndedAsync);
+        }
+
+        private async Task HandlePlaybackEndedAsync()
+        {
+            if (_isHandlingPlaybackEnded
+                || Playlist.Count == 0
+                || SelectedTrack is null)
+            {
+                return;
             }
 
-            var parts = SelectedTrack.Duration.Split(':');
-            if (parts.Length != 2
-                || !int.TryParse(parts[0], out var minutes)
-                || !int.TryParse(parts[1], out var seconds))
-            {
-                return 0;
-            }
+            _isHandlingPlaybackEnded = true;
 
-            return (minutes * 60) + seconds;
+            try
+            {
+                switch (PlaybackMode)
+                {
+                    case PlaybackMode.SingleLoop:
+                        await PlayTrackAsync(SelectedTrack);
+                        break;
+                    case PlaybackMode.Shuffle:
+                        var nextTrack = GetRandomTrack();
+                        if (nextTrack is not null)
+                        {
+                            await PlayTrackAsync(nextTrack);
+                        }
+                        break;
+                    default:
+                        await MoveSelectionAsync(1);
+                        break;
+                }
+            }
+            finally
+            {
+                _isHandlingPlaybackEnded = false;
+            }
         }
 
-        private static string FormatPlaybackTime(int totalSeconds) =>
-            $"{totalSeconds / 60:00}:{totalSeconds % 60:00}";
+        private MusicTrack? GetRandomTrack()
+        {
+            if (Playlist.Count == 0)
+            {
+                return null;
+            }
+
+            if (Playlist.Count == 1)
+            {
+                return Playlist[0];
+            }
+
+            var candidates = Playlist
+                .Where(track => track != SelectedTrack)
+                .ToList();
+
+            return candidates[_random.Next(candidates.Count)];
+        }
+
+        private static string FormatPlaybackTime(int totalSeconds)
+        {
+            totalSeconds = Math.Max(totalSeconds, 0);
+            return $"{totalSeconds / 60:00}:{totalSeconds % 60:00}";
+        }
     }
 }
