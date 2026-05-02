@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Tunvix.Pages.Controls.PlaylistTrackTitleView">
+
+    <Grid>
+        <Label x:Name="StaticTitleLabel"
+               MaxLines="1"
+               LineBreakMode="TailTruncation"
+               VerticalTextAlignment="Center" />
+
+        <Grid x:Name="MarqueeViewport"
+              IsVisible="False"
+              InputTransparent="True">
+            <HorizontalStackLayout x:Name="MarqueeTrack"
+                                   Spacing="24">
+                <Label x:Name="MarqueePrimaryLabel"
+                       MaxLines="1"
+                       LineBreakMode="NoWrap"
+                       VerticalTextAlignment="Center" />
+                <Label x:Name="MarqueeSecondaryLabel"
+                       MaxLines="1"
+                       LineBreakMode="NoWrap"
+                       VerticalTextAlignment="Center" />
+            </HorizontalStackLayout>
+        </Grid>
+    </Grid>
+</ContentView>

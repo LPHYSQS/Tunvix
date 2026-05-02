@@ -4,6 +4,7 @@
              xmlns:f="clr-namespace:Fonts"
              xmlns:models="clr-namespace:Tunvix.Models"
              xmlns:pageModels="clr-namespace:Tunvix.PageModels"
+             xmlns:controls="clr-namespace:Tunvix.Pages.Controls"
              x:Class="Tunvix.Pages.MainPage"
              x:DataType="pageModels:MainPageModel"
              x:Name="MainPageRoot"
@@ -451,6 +452,7 @@
                     <CollectionView Grid.Row="1"
                                     ItemsSource="{Binding Playlist}"
                                     SelectionMode="None"
+                                    ItemSizingStrategy="MeasureFirstItem"
                                     Margin="0,0,0,8">
                         <CollectionView.EmptyView>
                             <VerticalStackLayout Spacing="10"
@@ -478,6 +480,7 @@
                             <DataTemplate x:DataType="models:MusicTrack">
                                 <Border Margin="0,0,8,12"
                                         Padding="16,14"
+                                        HeightRequest="92"
                                         Background="{AppThemeBinding Light={StaticResource LightListItemBackground}, Dark={StaticResource DarkListItemBackground}}"
                                         Stroke="{AppThemeBinding Light={StaticResource LightListItemStroke}, Dark={StaticResource DarkListItemStroke}}"
                                         StrokeThickness="1"
@@ -517,12 +520,17 @@
                                         <VerticalStackLayout Grid.Column="1"
                                                              Spacing="4"
                                                              VerticalOptions="Center">
-                                            <Label Text="{Binding Title}"
-                                                   FontSize="17"
-                                                   FontAttributes="Bold"
-                                                   TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                                            <controls:PlaylistTrackTitleView Text="{Binding Title}"
+                                                                             IsMarqueeActive="{Binding IsPlayingCurrentTrack}"
+                                                                             HeightRequest="24"
+                                                                             HorizontalOptions="Fill"
+                                                                             TitleFontSize="17"
+                                                                             TitleFontAttributes="Bold"
+                                                                             TitleTextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
                                             <Label Text="{Binding Artist}"
                                                    FontSize="13"
+                                                   MaxLines="1"
+                                                   LineBreakMode="TailTruncation"
                                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                                         </VerticalStackLayout>
 
@@ -538,7 +546,7 @@
                                                     Background="{AppThemeBinding Light={StaticResource LightActivePillBackground}, Dark={StaticResource DarkActivePillBackground}}"
                                                     StrokeThickness="0"
                                                     StrokeShape="RoundRectangle 999"
-                                                    IsVisible="{Binding IsCurrent}">
+                                                    IsVisible="{Binding IsPlayingCurrentTrack}">
                                                 <Label Text="当前播放"
                                                        FontSize="11"
                                                        TextColor="{AppThemeBinding Light={StaticResource LightAccentCream}, Dark={StaticResource DarkAccentCream}}" />

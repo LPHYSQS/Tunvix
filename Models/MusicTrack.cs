@@ -36,5 +36,8 @@ namespace Tunvix.Models
 
         [ObservableProperty]
         private bool _isCurrent;
+
+        [ObservableProperty]
+        private bool _isPlayingCurrentTrack;
     }
 }

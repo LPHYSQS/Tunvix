@@ -206,11 +206,13 @@ namespace Tunvix.PageModels
             if (oldValue is not null)
             {
                 oldValue.IsCurrent = false;
+                oldValue.IsPlayingCurrentTrack = false;
             }
 
             if (newValue is not null)
             {
                 newValue.IsCurrent = true;
+                newValue.IsPlayingCurrentTrack = IsPlaying;
                 _currentDurationMilliseconds = newValue.DurationMilliseconds;
             }
             else
@@ -227,6 +229,11 @@ namespace Tunvix.PageModels
 
         partial void OnIsPlayingChanged(bool value)
         {
+            if (SelectedTrack is not null)
+            {
+                SelectedTrack.IsPlayingCurrentTrack = value;
+            }
+
             OnPropertyChanged(nameof(PlayPauseGlyph));
             OnPropertyChanged(nameof(NowPlayingLabel));
         }
