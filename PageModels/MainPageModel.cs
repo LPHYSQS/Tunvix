@@ -7,6 +7,13 @@ using Tunvix.Services;
 
 namespace Tunvix.PageModels
 {
+    public enum PlaybackMode
+    {
+        Sequential,
+        SingleLoop,
+        Shuffle
+    }
+
     public partial class MainPageModel : ObservableObject
     {
         private readonly ThemeService _themeService;
@@ -26,6 +33,9 @@ namespace Tunvix.PageModels
         [ObservableProperty]
         private bool _isPlaylistDrawerOpen;
 
+        [ObservableProperty]
+        private PlaybackMode _playbackMode = PlaybackMode.Sequential;
+
         public string PlayPauseGlyph => IsPlaying
             ? FluentUI.pause_24_regular
             : FluentUI.play_24_regular;
@@ -39,6 +49,24 @@ namespace Tunvix.PageModels
         public string PlaylistSummary => $"\u5171 {Playlist.Count} \u9996\u6b4c\u66f2";
 
         public bool IsDarkTheme => _themeService.IsDarkTheme;
+
+        public string PlaybackModeLabel => PlaybackMode switch
+        {
+            PlaybackMode.Sequential => "\u987a\u5e8f\u64ad\u653e",
+            PlaybackMode.SingleLoop => "\u5355\u66f2\u5faa\u73af",
+            PlaybackMode.Shuffle => "\u968f\u673a\u64ad\u653e",
+            _ => "\u987a\u5e8f\u64ad\u653e"
+        };
+
+        public string PlaybackModeGlyph => PlaybackMode switch
+        {
+            PlaybackMode.Sequential => FluentUI.arrow_sort_20_regular,
+            PlaybackMode.SingleLoop => FluentUI.arrow_repeat_1_20_regular,
+            PlaybackMode.Shuffle => FluentUI.arrow_shuffle_20_regular,
+            _ => FluentUI.arrow_sort_20_regular
+        };
+
+        public string PlaybackModeDescription => $"{PlaybackModeLabel}\uff0c\u70b9\u51fb\u5207\u6362";
 
         public MainPageModel(ThemeService themeService)
         {
@@ -129,6 +157,13 @@ namespace Tunvix.PageModels
             OnPropertyChanged(nameof(CurrentPlaybackTime));
         }
 
+        partial void OnPlaybackModeChanged(PlaybackMode value)
+        {
+            OnPropertyChanged(nameof(PlaybackModeLabel));
+            OnPropertyChanged(nameof(PlaybackModeGlyph));
+            OnPropertyChanged(nameof(PlaybackModeDescription));
+        }
+
         public string CurrentTrackTitle => SelectedTrack?.Title ?? "\u672a\u9009\u62e9\u6b4c\u66f2";
 
         public string CurrentTrackArtist => SelectedTrack?.Artist ?? "\u7b49\u5f85\u64ad\u653e\u5217\u8868";
@@ -140,6 +175,17 @@ namespace Tunvix.PageModels
         [RelayCommand]
         private void TogglePlayback() =>
             IsPlaying = !IsPlaying;
+
+        [RelayCommand]
+        private void CyclePlaybackMode()
+        {
+            PlaybackMode = PlaybackMode switch
+            {
+                PlaybackMode.Sequential => PlaybackMode.SingleLoop,
+                PlaybackMode.SingleLoop => PlaybackMode.Shuffle,
+                _ => PlaybackMode.Sequential
+            };
+        }
 
         [RelayCommand]
         private void OpenPlaylistDrawer() =>

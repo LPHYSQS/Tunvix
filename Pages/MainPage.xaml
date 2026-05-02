@@ -106,9 +106,10 @@
     </ContentPage.Background>
 
     <Grid>
-        <Grid Padding="22,20,22,24">
-            <Border Padding="20,20,20,20"
-                    VerticalOptions="Center"
+        <Grid Padding="22,16,22,18">
+            <Border x:Name="PlayerCard"
+                    Padding="20,24,20,22"
+                    VerticalOptions="Fill"
                     Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                     StrokeThickness="1"
                     StrokeShape="RoundRectangle 34">
@@ -121,7 +122,8 @@
                     </LinearGradientBrush>
                 </Border.Background>
 
-                <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="18">
+                <Grid RowDefinitions="Auto,*,Auto,Auto,Auto"
+                      RowSpacing="16">
                     <Grid ColumnDefinitions="46,*,46">
                         <Border WidthRequest="46"
                                 HeightRequest="46"
@@ -197,42 +199,42 @@
                     <Grid Grid.Row="1"
                           HorizontalOptions="Center"
                           VerticalOptions="Center"
-                          Margin="0,2,0,0">
-                        <Border WidthRequest="186"
-                                HeightRequest="186"
+                          Margin="0,8,0,4">
+                        <Border WidthRequest="210"
+                                HeightRequest="210"
                                 Background="{StaticResource VinylOuter}"
                                 Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                                 StrokeThickness="1"
-                                StrokeShape="RoundRectangle 93">
+                                StrokeShape="RoundRectangle 105">
                             <Grid>
-                                <Border WidthRequest="146"
-                                        HeightRequest="146"
+                                <Border WidthRequest="164"
+                                        HeightRequest="164"
                                         Background="{StaticResource VinylMid}"
                                         Stroke="{StaticResource VinylMidStroke}"
                                         StrokeThickness="1"
-                                        StrokeShape="RoundRectangle 73"
+                                        StrokeShape="RoundRectangle 82"
                                         HorizontalOptions="Center"
                                         VerticalOptions="Center" />
-                                <Border WidthRequest="92"
-                                        HeightRequest="92"
+                                <Border WidthRequest="104"
+                                        HeightRequest="104"
                                         Background="{StaticResource VinylInner}"
                                         Stroke="{StaticResource VinylInnerStroke}"
                                         StrokeThickness="1"
-                                        StrokeShape="RoundRectangle 46"
+                                        StrokeShape="RoundRectangle 52"
                                         HorizontalOptions="Center"
                                         VerticalOptions="Center" />
-                                <Border WidthRequest="34"
-                                        HeightRequest="34"
+                                <Border WidthRequest="40"
+                                        HeightRequest="40"
                                         Background="{StaticResource VinylCenter}"
                                         StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 17"
+                                        StrokeShape="RoundRectangle 20"
                                         HorizontalOptions="Center"
                                         VerticalOptions="Center" />
-                                <Border WidthRequest="12"
-                                        HeightRequest="12"
+                                <Border WidthRequest="14"
+                                        HeightRequest="14"
                                         Background="{StaticResource VinylHighlight}"
                                         StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 6"
+                                        StrokeShape="RoundRectangle 7"
                                         HorizontalOptions="Center"
                                         VerticalOptions="Center" />
                             </Grid>
@@ -297,7 +299,8 @@
                     </HorizontalStackLayout>
 
                     <VerticalStackLayout Grid.Row="3"
-                                         Spacing="4">
+                                         Spacing="6"
+                                         Margin="2,4,2,0">
                         <Slider Minimum="0"
                                 Maximum="1"
                                 Value="{Binding PlaybackProgress, Mode=TwoWay}"
@@ -316,6 +319,44 @@
                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                         </Grid>
                     </VerticalStackLayout>
+
+                    <Grid Grid.Row="4"
+                          ColumnDefinitions="Auto,*"
+                          ColumnSpacing="12"
+                          VerticalOptions="End">
+                        <Label Text="播放模式"
+                               VerticalOptions="Center"
+                               FontSize="12"
+                               CharacterSpacing="0.8"
+                               TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+
+                        <Border Grid.Column="1"
+                                Padding="12,8"
+                                Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                                Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 999"
+                                HorizontalOptions="End"
+                                SemanticProperties.Description="{Binding PlaybackModeDescription}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding CyclePlaybackModeCommand}" />
+                            </Border.GestureRecognizers>
+                            <Grid ColumnDefinitions="Auto,Auto"
+                                  ColumnSpacing="8">
+                                <Label Text="{Binding PlaybackModeGlyph}"
+                                       FontFamily="{x:Static f:FluentUI.FontFamily}"
+                                       FontSize="18"
+                                       VerticalOptions="Center"
+                                       TextColor="{StaticResource AccentOrange}" />
+                                <Label Grid.Column="1"
+                                       Text="{Binding PlaybackModeLabel}"
+                                       VerticalOptions="Center"
+                                       FontSize="13"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                            </Grid>
+                        </Border>
+                    </Grid>
                 </Grid>
             </Border>
         </Grid>
@@ -342,7 +383,8 @@
                     HorizontalOptions="Start"
                     VerticalOptions="Fill"
                     TranslationX="-420">
-                <Grid RowDefinitions="Auto,*" RowSpacing="16">
+                <Grid RowDefinitions="Auto,*"
+                      RowSpacing="16">
                     <Grid ColumnDefinitions="Auto,*,Auto"
                           ColumnSpacing="12">
                         <Border WidthRequest="42"
