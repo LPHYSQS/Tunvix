@@ -3,11 +3,14 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Fonts;
 using Tunvix.Models;
+using Tunvix.Services;
 
 namespace Tunvix.PageModels
 {
     public partial class MainPageModel : ObservableObject
     {
+        private readonly ThemeService _themeService;
+
         [ObservableProperty]
         private ObservableCollection<MusicTrack> _playlist = new();
 
@@ -21,12 +24,20 @@ namespace Tunvix.PageModels
             ? FluentUI.pause_24_regular
             : FluentUI.play_24_regular;
 
+        public string ThemeButtonDescription => IsDarkTheme
+            ? "\u5207\u6362\u5230\u6d45\u8272\u4e3b\u9898"
+            : "\u5207\u6362\u5230\u6df1\u8272\u4e3b\u9898";
+
         public string NowPlayingLabel => IsPlaying ? "\u6b63\u5728\u64ad\u653e" : "\u5df2\u6682\u505c";
 
         public string PlaylistSummary => $"\u5171 {Playlist.Count} \u9996\u6b4c\u66f2";
 
-        public MainPageModel()
+        public bool IsDarkTheme => _themeService.IsDarkTheme;
+
+        public MainPageModel(ThemeService themeService)
         {
+            _themeService = themeService;
+
             Playlist = new ObservableCollection<MusicTrack>
             {
                 new MusicTrack
@@ -112,6 +123,14 @@ namespace Tunvix.PageModels
         [RelayCommand]
         private void TogglePlayback() =>
             IsPlaying = !IsPlaying;
+
+        [RelayCommand]
+        private void ToggleTheme()
+        {
+            _themeService.ToggleTheme();
+            OnPropertyChanged(nameof(IsDarkTheme));
+            OnPropertyChanged(nameof(ThemeButtonDescription));
+        }
 
         [RelayCommand]
         private void SelectTrack(MusicTrack? track)

@@ -11,73 +11,153 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <Color x:Key="PlayerCardTop">#1B1E26</Color>
-            <Color x:Key="PlayerCardBottom">#111318</Color>
-            <Color x:Key="ListCardBackground">#0F1116</Color>
-            <Color x:Key="ListItemBackground">#141821</Color>
-            <Color x:Key="ListItemActiveBackground">#1C222D</Color>
-            <Color x:Key="ListItemStroke">#1F2430</Color>
-            <Color x:Key="ListItemActiveStroke">#D96A47</Color>
-            <Color x:Key="PrimaryText">#F6F1EB</Color>
-            <Color x:Key="SecondaryText">#9CA6B7</Color>
-            <Color x:Key="TertiaryText">#6F7786</Color>
+            <Color x:Key="LightPageGradientTop">#FBF8F4</Color>
+            <Color x:Key="DarkPageGradientTop">#090A0D</Color>
+            <Color x:Key="LightPageGradientMiddle">#F2ECE4</Color>
+            <Color x:Key="DarkPageGradientMiddle">#141821</Color>
+            <Color x:Key="LightPageGradientBottom">#E8DED4</Color>
+            <Color x:Key="DarkPageGradientBottom">#090A0D</Color>
+
+            <Color x:Key="LightPlayerCardTop">#F6F0E8</Color>
+            <Color x:Key="DarkPlayerCardTop">#1B1E26</Color>
+            <Color x:Key="LightPlayerCardBottom">#ECE3D8</Color>
+            <Color x:Key="DarkPlayerCardBottom">#111318</Color>
+
+            <Color x:Key="LightListCardBackground">#F7F1E8</Color>
+            <Color x:Key="DarkListCardBackground">#0F1116</Color>
+            <Color x:Key="LightListItemBackground">#EFE8DE</Color>
+            <Color x:Key="DarkListItemBackground">#141821</Color>
+            <Color x:Key="LightListItemActiveBackground">#E8DCCE</Color>
+            <Color x:Key="DarkListItemActiveBackground">#1C222D</Color>
+            <Color x:Key="LightListItemStroke">#D8CCBE</Color>
+            <Color x:Key="DarkListItemStroke">#1F2430</Color>
+
+            <Color x:Key="LightPrimaryText">#1F1A16</Color>
+            <Color x:Key="DarkPrimaryText">#F6F1EB</Color>
+            <Color x:Key="LightSecondaryText">#6C655F</Color>
+            <Color x:Key="DarkSecondaryText">#9CA6B7</Color>
+            <Color x:Key="LightTertiaryText">#8E867F</Color>
+            <Color x:Key="DarkTertiaryText">#6F7786</Color>
+
             <Color x:Key="AccentOrange">#D96A47</Color>
-            <Color x:Key="AccentCream">#F7E6D6</Color>
-            <Color x:Key="ControlBackground">#232731</Color>
-            <Color x:Key="ControlStroke">#2E3440</Color>
+            <Color x:Key="LightAccentCream">#FFF6EE</Color>
+            <Color x:Key="DarkAccentCream">#F7E6D6</Color>
+            <Color x:Key="LightControlBackground">#E6DDD2</Color>
+            <Color x:Key="DarkControlBackground">#232731</Color>
+            <Color x:Key="LightControlStroke">#D3C6B8</Color>
+            <Color x:Key="DarkControlStroke">#2E3440</Color>
+            <Color x:Key="LightThemeButtonBackground">#FFFDF9</Color>
+            <Color x:Key="DarkThemeButtonBackground">#0E1117</Color>
+            <Color x:Key="LightActivePillBackground">#DCCABB</Color>
+            <Color x:Key="DarkActivePillBackground">#252C37</Color>
+
             <Color x:Key="VinylOuter">#0B0D11</Color>
             <Color x:Key="VinylMid">#171A20</Color>
             <Color x:Key="VinylInner">#252A35</Color>
             <Color x:Key="VinylCenter">#D96A47</Color>
+            <Color x:Key="VinylHighlight">#F7E6D6</Color>
+            <Color x:Key="VinylMidStroke">#434B5A</Color>
+            <Color x:Key="VinylInnerStroke">#566074</Color>
+
+            <FontImageSource x:Key="ToggleThemeLightIcon"
+                             Glyph="{x:Static f:FluentUI.weather_sunny_16_regular}"
+                             FontFamily="{x:Static f:FluentUI.FontFamily}"
+                             Size="18"
+                             Color="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+
+            <FontImageSource x:Key="ToggleThemeDarkIcon"
+                             Glyph="{x:Static f:FluentUI.weather_moon_20_regular}"
+                             FontFamily="{x:Static f:FluentUI.FontFamily}"
+                             Size="18"
+                             Color="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
 
             <Style x:Key="SectionEyebrowStyle" TargetType="Label">
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="CharacterSpacing" Value="1.2" />
-                <Setter Property="TextColor" Value="{StaticResource SecondaryText}" />
+                <Setter Property="TextColor"
+                        Value="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
             </Style>
         </ResourceDictionary>
     </ContentPage.Resources>
 
     <ContentPage.Background>
         <LinearGradientBrush EndPoint="0.9,1">
-            <GradientStop Color="#090A0D" Offset="0.0" />
-            <GradientStop Color="#141821" Offset="0.45" />
-            <GradientStop Color="#090A0D" Offset="1.0" />
+            <GradientStop Color="{AppThemeBinding Light={StaticResource LightPageGradientTop}, Dark={StaticResource DarkPageGradientTop}}"
+                          Offset="0.0" />
+            <GradientStop Color="{AppThemeBinding Light={StaticResource LightPageGradientMiddle}, Dark={StaticResource DarkPageGradientMiddle}}"
+                          Offset="0.45" />
+            <GradientStop Color="{AppThemeBinding Light={StaticResource LightPageGradientBottom}, Dark={StaticResource DarkPageGradientBottom}}"
+                          Offset="1.0" />
         </LinearGradientBrush>
     </ContentPage.Background>
 
     <Grid Padding="22,20,22,24" RowSpacing="18" RowDefinitions="Auto,*">
         <Border Grid.Row="0"
                 Padding="20,20,20,20"
-                Stroke="{StaticResource ControlStroke}"
+                Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                 StrokeThickness="1"
                 StrokeShape="RoundRectangle 34">
             <Border.Background>
                 <LinearGradientBrush EndPoint="1,1">
-                    <GradientStop Color="{StaticResource PlayerCardTop}" Offset="0.0" />
-                    <GradientStop Color="{StaticResource PlayerCardBottom}" Offset="1.0" />
+                    <GradientStop Color="{AppThemeBinding Light={StaticResource LightPlayerCardTop}, Dark={StaticResource DarkPlayerCardTop}}"
+                                  Offset="0.0" />
+                    <GradientStop Color="{AppThemeBinding Light={StaticResource LightPlayerCardBottom}, Dark={StaticResource DarkPlayerCardBottom}}"
+                                  Offset="1.0" />
                 </LinearGradientBrush>
             </Border.Background>
 
             <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="18">
-                <VerticalStackLayout Spacing="6">
-                    <Label Text="{Binding NowPlayingLabel}"
-                           Style="{StaticResource SectionEyebrowStyle}"
-                           HorizontalTextAlignment="Center" />
-                    <Label Text="{Binding CurrentTrackTitle}"
-                           FontSize="24"
-                           FontAttributes="Bold"
-                           LineBreakMode="TailTruncation"
-                           MaxLines="1"
-                           HorizontalTextAlignment="Center"
-                           TextColor="{StaticResource PrimaryText}" />
-                    <Label Text="{Binding CurrentTrackArtist}"
-                           FontSize="14"
-                           LineBreakMode="TailTruncation"
-                           MaxLines="1"
-                           HorizontalTextAlignment="Center"
-                           TextColor="{StaticResource SecondaryText}" />
-                </VerticalStackLayout>
+                <Grid ColumnDefinitions="46,*,46">
+                    <VerticalStackLayout Grid.Column="1"
+                                         Spacing="6">
+                        <Label Text="{Binding NowPlayingLabel}"
+                               Style="{StaticResource SectionEyebrowStyle}"
+                               HorizontalTextAlignment="Center" />
+                        <Label Text="{Binding CurrentTrackTitle}"
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="1"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                        <Label Text="{Binding CurrentTrackArtist}"
+                               FontSize="14"
+                               LineBreakMode="TailTruncation"
+                               MaxLines="1"
+                               HorizontalTextAlignment="Center"
+                               TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                    </VerticalStackLayout>
+
+                    <Border Grid.Column="2"
+                            WidthRequest="46"
+                            HeightRequest="46"
+                            Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                            Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
+                            StrokeThickness="1"
+                            StrokeShape="RoundRectangle 23"
+                            HorizontalOptions="End"
+                            VerticalOptions="Start"
+                            SemanticProperties.Description="{Binding ThemeButtonDescription}">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ToggleThemeCommand}" />
+                        </Border.GestureRecognizers>
+                        <Image HeightRequest="20"
+                               WidthRequest="20"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Aspect="Center"
+                               Source="{StaticResource ToggleThemeDarkIcon}">
+                            <Image.Triggers>
+                                <DataTrigger TargetType="Image"
+                                             Binding="{Binding IsDarkTheme}"
+                                             Value="True">
+                                    <Setter Property="Source"
+                                            Value="{StaticResource ToggleThemeLightIcon}" />
+                                </DataTrigger>
+                            </Image.Triggers>
+                        </Image>
+                    </Border>
+                </Grid>
 
                 <Grid Grid.Row="1"
                       HorizontalOptions="Center"
@@ -86,14 +166,14 @@
                     <Border WidthRequest="186"
                             HeightRequest="186"
                             Background="{StaticResource VinylOuter}"
-                            Stroke="#2A303A"
+                            Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                             StrokeThickness="1"
                             StrokeShape="RoundRectangle 93">
                         <Grid>
                             <Border WidthRequest="146"
                                     HeightRequest="146"
                                     Background="{StaticResource VinylMid}"
-                                    Stroke="#343B47"
+                                    Stroke="{StaticResource VinylMidStroke}"
                                     StrokeThickness="1"
                                     StrokeShape="RoundRectangle 73"
                                     HorizontalOptions="Center"
@@ -101,7 +181,7 @@
                             <Border WidthRequest="92"
                                     HeightRequest="92"
                                     Background="{StaticResource VinylInner}"
-                                    Stroke="#3A4453"
+                                    Stroke="{StaticResource VinylInnerStroke}"
                                     StrokeThickness="1"
                                     StrokeShape="RoundRectangle 46"
                                     HorizontalOptions="Center"
@@ -115,7 +195,7 @@
                                     VerticalOptions="Center" />
                             <Border WidthRequest="12"
                                     HeightRequest="12"
-                                    Background="{StaticResource AccentCream}"
+                                    Background="{StaticResource VinylHighlight}"
                                     StrokeThickness="0"
                                     StrokeShape="RoundRectangle 6"
                                     HorizontalOptions="Center"
@@ -129,11 +209,11 @@
                                        HorizontalOptions="Center">
                     <Border WidthRequest="58"
                             HeightRequest="58"
-                            Background="{StaticResource ControlBackground}"
-                            Stroke="{StaticResource ControlStroke}"
+                            Background="{AppThemeBinding Light={StaticResource LightControlBackground}, Dark={StaticResource DarkControlBackground}}"
+                            Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                             StrokeThickness="1"
                             StrokeShape="RoundRectangle 29"
-                            SemanticProperties.Description="&#x4E0A;&#x4E00;&#x66F2;">
+                            SemanticProperties.Description="上一曲">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding PreviousTrackCommand}" />
                         </Border.GestureRecognizers>
@@ -142,7 +222,7 @@
                                HorizontalOptions="Center"
                                VerticalOptions="Center"
                                FontSize="24"
-                               TextColor="{StaticResource PrimaryText}" />
+                               TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
                     </Border>
 
                     <Border WidthRequest="74"
@@ -150,7 +230,7 @@
                             Background="{StaticResource AccentOrange}"
                             StrokeThickness="0"
                             StrokeShape="RoundRectangle 37"
-                            SemanticProperties.Description="&#x64AD;&#x653E;&#x6216;&#x6682;&#x505C;">
+                            SemanticProperties.Description="播放或暂停">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding TogglePlaybackCommand}" />
                         </Border.GestureRecognizers>
@@ -159,16 +239,16 @@
                                HorizontalOptions="Center"
                                VerticalOptions="Center"
                                FontSize="30"
-                               TextColor="{StaticResource AccentCream}" />
+                               TextColor="{AppThemeBinding Light={StaticResource LightAccentCream}, Dark={StaticResource DarkAccentCream}}" />
                     </Border>
 
                     <Border WidthRequest="58"
                             HeightRequest="58"
-                            Background="{StaticResource ControlBackground}"
-                            Stroke="{StaticResource ControlStroke}"
+                            Background="{AppThemeBinding Light={StaticResource LightControlBackground}, Dark={StaticResource DarkControlBackground}}"
+                            Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                             StrokeThickness="1"
                             StrokeShape="RoundRectangle 29"
-                            SemanticProperties.Description="&#x4E0B;&#x4E00;&#x66F2;">
+                            SemanticProperties.Description="下一曲">
                         <Border.GestureRecognizers>
                             <TapGestureRecognizer Command="{Binding NextTrackCommand}" />
                         </Border.GestureRecognizers>
@@ -177,35 +257,35 @@
                                HorizontalOptions="Center"
                                VerticalOptions="Center"
                                FontSize="24"
-                               TextColor="{StaticResource PrimaryText}" />
+                               TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
                     </Border>
                 </HorizontalStackLayout>
             </Grid>
         </Border>
 
         <Border Grid.Row="1"
-                Padding="18,18,18,8"
-                Background="{StaticResource ListCardBackground}"
-                Stroke="{StaticResource ControlStroke}"
+                Padding="18,18,12,8"
+                Background="{AppThemeBinding Light={StaticResource LightListCardBackground}, Dark={StaticResource DarkListCardBackground}}"
+                Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                 StrokeThickness="1"
                 StrokeShape="RoundRectangle 34">
             <Grid RowDefinitions="Auto,*" RowSpacing="16">
                 <Grid ColumnDefinitions="*,Auto">
                     <VerticalStackLayout Spacing="4">
-                        <Label Text="&#x64AD;&#x653E;&#x5217;&#x8868;"
+                        <Label Text="播放列表"
                                FontSize="24"
                                FontAttributes="Bold"
-                               TextColor="{StaticResource PrimaryText}" />
+                               TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
                         <Label Text="{Binding PlaylistSummary}"
                                FontSize="13"
-                               TextColor="{StaticResource SecondaryText}" />
+                               TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                     </VerticalStackLayout>
 
                     <Label Grid.Column="1"
                            Text="{x:Static f:FluentUI.music_note_2_20_regular}"
                            FontFamily="{x:Static f:FluentUI.FontFamily}"
                            FontSize="24"
-                           TextColor="{StaticResource TertiaryText}"
+                           TextColor="{AppThemeBinding Light={StaticResource LightTertiaryText}, Dark={StaticResource DarkTertiaryText}}"
                            VerticalOptions="Center" />
                 </Grid>
 
@@ -215,10 +295,10 @@
                                 Margin="0,0,0,8">
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="models:MusicTrack">
-                            <Border Margin="0,0,0,12"
+                            <Border Margin="0,0,14,12"
                                     Padding="16,14"
-                                    Background="{StaticResource ListItemBackground}"
-                                    Stroke="{StaticResource ListItemStroke}"
+                                    Background="{AppThemeBinding Light={StaticResource LightListItemBackground}, Dark={StaticResource DarkListItemBackground}}"
+                                    Stroke="{AppThemeBinding Light={StaticResource LightListItemStroke}, Dark={StaticResource DarkListItemStroke}}"
                                     StrokeThickness="1"
                                     StrokeShape="RoundRectangle 24">
                                 <Border.GestureRecognizers>
@@ -231,8 +311,10 @@
                                     <DataTrigger TargetType="Border"
                                                  Binding="{Binding IsCurrent}"
                                                  Value="True">
-                                        <Setter Property="Background" Value="{StaticResource ListItemActiveBackground}" />
-                                        <Setter Property="Stroke" Value="{StaticResource ListItemActiveStroke}" />
+                                        <Setter Property="Background"
+                                                Value="{AppThemeBinding Light={StaticResource LightListItemActiveBackground}, Dark={StaticResource DarkListItemActiveBackground}}" />
+                                        <Setter Property="Stroke"
+                                                Value="{StaticResource AccentOrange}" />
                                     </DataTrigger>
                                 </Border.Triggers>
 
@@ -247,7 +329,7 @@
                                                VerticalOptions="Center"
                                                FontSize="16"
                                                FontAttributes="Bold"
-                                               TextColor="{StaticResource AccentCream}" />
+                                               TextColor="{AppThemeBinding Light={StaticResource LightAccentCream}, Dark={StaticResource DarkAccentCream}}" />
                                     </Border>
 
                                     <VerticalStackLayout Grid.Column="1"
@@ -256,10 +338,10 @@
                                         <Label Text="{Binding Title}"
                                                FontSize="17"
                                                FontAttributes="Bold"
-                                               TextColor="{StaticResource PrimaryText}" />
+                                               TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
                                         <Label Text="{Binding Artist}"
                                                FontSize="13"
-                                               TextColor="{StaticResource SecondaryText}" />
+                                               TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                                     </VerticalStackLayout>
 
                                     <VerticalStackLayout Grid.Column="2"
@@ -268,16 +350,16 @@
                                                          HorizontalOptions="End">
                                         <Label Text="{Binding Duration}"
                                                FontSize="12"
-                                               TextColor="{StaticResource SecondaryText}"
+                                               TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}"
                                                HorizontalTextAlignment="End" />
                                         <Border Padding="10,4"
-                                                Background="#252C37"
+                                                Background="{AppThemeBinding Light={StaticResource LightActivePillBackground}, Dark={StaticResource DarkActivePillBackground}}"
                                                 StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 999"
                                                 IsVisible="{Binding IsCurrent}">
-                                            <Label Text="&#x5F53;&#x524D;&#x64AD;&#x653E;"
+                                            <Label Text="当前播放"
                                                    FontSize="11"
-                                                   TextColor="{StaticResource AccentCream}" />
+                                                   TextColor="{AppThemeBinding Light={StaticResource LightAccentCream}, Dark={StaticResource DarkAccentCream}}" />
                                         </Border>
                                     </VerticalStackLayout>
                                 </Grid>
