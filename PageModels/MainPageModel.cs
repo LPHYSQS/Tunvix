@@ -20,6 +20,9 @@ namespace Tunvix.PageModels
         [ObservableProperty]
         private bool _isPlaying = true;
 
+        [ObservableProperty]
+        private double _playbackProgress = 0.36;
+
         public string PlayPauseGlyph => IsPlaying
             ? FluentUI.pause_24_regular
             : FluentUI.play_24_regular;
@@ -108,6 +111,8 @@ namespace Tunvix.PageModels
 
             OnPropertyChanged(nameof(CurrentTrackTitle));
             OnPropertyChanged(nameof(CurrentTrackArtist));
+            OnPropertyChanged(nameof(CurrentPlaybackTime));
+            OnPropertyChanged(nameof(TotalPlaybackTime));
         }
 
         partial void OnIsPlayingChanged(bool value)
@@ -116,9 +121,18 @@ namespace Tunvix.PageModels
             OnPropertyChanged(nameof(NowPlayingLabel));
         }
 
+        partial void OnPlaybackProgressChanged(double value)
+        {
+            OnPropertyChanged(nameof(CurrentPlaybackTime));
+        }
+
         public string CurrentTrackTitle => SelectedTrack?.Title ?? "\u672a\u9009\u62e9\u6b4c\u66f2";
 
         public string CurrentTrackArtist => SelectedTrack?.Artist ?? "\u7b49\u5f85\u64ad\u653e\u5217\u8868";
+
+        public string CurrentPlaybackTime => FormatPlaybackTime(GetCurrentPlaybackSeconds());
+
+        public string TotalPlaybackTime => SelectedTrack?.Duration ?? "00:00";
 
         [RelayCommand]
         private void TogglePlayback() =>
@@ -174,5 +188,33 @@ namespace Tunvix.PageModels
             var nextIndex = (currentIndex + offset + Playlist.Count) % Playlist.Count;
             SelectedTrack = Playlist[nextIndex];
         }
+
+        private int GetCurrentPlaybackSeconds()
+        {
+            var totalSeconds = GetTrackDurationSeconds();
+            var currentSeconds = (int)Math.Round(totalSeconds * PlaybackProgress);
+            return Math.Clamp(currentSeconds, 0, totalSeconds);
+        }
+
+        private int GetTrackDurationSeconds()
+        {
+            if (SelectedTrack?.Duration is null)
+            {
+                return 0;
+            }
+
+            var parts = SelectedTrack.Duration.Split(':');
+            if (parts.Length != 2
+                || !int.TryParse(parts[0], out var minutes)
+                || !int.TryParse(parts[1], out var seconds))
+            {
+                return 0;
+            }
+
+            return (minutes * 60) + seconds;
+        }
+
+        private static string FormatPlaybackTime(int totalSeconds) =>
+            $"{totalSeconds / 60:00}:{totalSeconds % 60:00}";
     }
 }

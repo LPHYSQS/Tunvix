@@ -106,7 +106,7 @@
                 </LinearGradientBrush>
             </Border.Background>
 
-            <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="18">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="18">
                 <Grid ColumnDefinitions="46,*,46">
                     <VerticalStackLayout Grid.Column="1"
                                          Spacing="6">
@@ -260,6 +260,27 @@
                                TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
                     </Border>
                 </HorizontalStackLayout>
+
+                <VerticalStackLayout Grid.Row="3"
+                                     Spacing="4">
+                    <Slider Minimum="0"
+                            Maximum="1"
+                            Value="{Binding PlaybackProgress, Mode=TwoWay}"
+                            MinimumTrackColor="{StaticResource AccentOrange}"
+                            MaximumTrackColor="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
+                            ThumbColor="{StaticResource AccentOrange}"
+                            SemanticProperties.Description="播放进度" />
+                    <Grid ColumnDefinitions="*,*">
+                        <Label Text="{Binding CurrentPlaybackTime}"
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                        <Label Grid.Column="1"
+                               Text="{Binding TotalPlaybackTime}"
+                               FontSize="12"
+                               HorizontalTextAlignment="End"
+                               TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                    </Grid>
+                </VerticalStackLayout>
             </Grid>
         </Border>
 
