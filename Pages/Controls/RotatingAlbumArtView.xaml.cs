@@ -79,9 +79,10 @@ namespace Tunvix.Pages.Controls
 
         private void UpdatePresentation()
         {
-            if (Dispatcher.IsDispatchRequired)
+            var dispatcher = Dispatcher;
+            if (dispatcher?.IsDispatchRequired == true)
             {
-                Dispatcher.Dispatch(UpdatePresentation);
+                dispatcher.Dispatch(UpdatePresentation);
                 return;
             }
 

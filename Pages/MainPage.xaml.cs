@@ -134,41 +134,21 @@ namespace Tunvix.Pages
             });
         }
 
-        private async void OnPlaylistSelectionChanged(object? sender, SelectionChangedEventArgs e)
-        {
-            try
-            {
-                if (e.CurrentSelection.FirstOrDefault() is not MusicTrack track)
-                {
-                    return;
-                }
-
-                await _model.SelectTrackCommand.ExecuteAsync(track);
-            }
-            finally
-            {
-                if (sender is CollectionView collectionView)
-                {
-                    collectionView.SelectedItem = null;
-                }
-            }
-        }
-
         private async Task<PlaylistLoadStrategy?> OnPlaylistLoadStrategyRequestedAsync(PlaylistImportSource importSource)
         {
             var action = await DisplayActionSheetAsync(
                 importSource == PlaylistImportSource.DeviceLibrary
-                    ? "当前播放列表已有歌曲，请选择导入本机音频的方式"
-                    : "当前播放列表已有歌曲，请选择导入文件夹音频的方式",
-                "取消",
+                    ? "\u5f53\u524d\u64ad\u653e\u5217\u8868\u5df2\u6709\u6b4c\u66f2\uff0c\u8bf7\u9009\u62e9\u5bfc\u5165\u672c\u673a\u97f3\u9891\u7684\u65b9\u5f0f"
+                    : "\u5f53\u524d\u64ad\u653e\u5217\u8868\u5df2\u6709\u6b4c\u66f2\uff0c\u8bf7\u9009\u62e9\u5bfc\u5165\u6587\u4ef6\u5939\u97f3\u9891\u7684\u65b9\u5f0f",
+                "\u53d6\u6d88",
                 null,
-                "增量导入",
-                "完全覆盖");
+                "\u589e\u91cf\u5bfc\u5165",
+                "\u5b8c\u5168\u8986\u76d6");
 
             return action switch
             {
-                "增量导入" => PlaylistLoadStrategy.Incremental,
-                "完全覆盖" => PlaylistLoadStrategy.ReplaceAll,
+                "\u589e\u91cf\u5bfc\u5165" => PlaylistLoadStrategy.Incremental,
+                "\u5b8c\u5168\u8986\u76d6" => PlaylistLoadStrategy.ReplaceAll,
                 _ => null
             };
         }
@@ -197,16 +177,16 @@ namespace Tunvix.Pages
             }
 
             var message = isCurrentTrack
-                ? "是否从播放列表中移除当前歌曲？"
+                ? "\u662f\u5426\u4ece\u64ad\u653e\u5217\u8868\u4e2d\u79fb\u9664\u5f53\u524d\u6b4c\u66f2\uff1f"
                 : string.IsNullOrWhiteSpace(track.Title)
-                    ? "是否从播放列表中移除这首歌曲？"
-                    : $"是否从播放列表中移除《{track.Title}》？";
+                    ? "\u662f\u5426\u4ece\u64ad\u653e\u5217\u8868\u4e2d\u79fb\u9664\u8fd9\u9996\u6b4c\u66f2\uff1f"
+                    : $"\u662f\u5426\u4ece\u64ad\u653e\u5217\u8868\u4e2d\u79fb\u9664\u300a{track.Title}\u300b\uff1f";
 
             return DisplayAlertAsync(
-                "移除歌曲",
+                "\u79fb\u9664\u6b4c\u66f2",
                 message,
-                "确认",
-                "取消");
+                "\u786e\u8ba4",
+                "\u53d6\u6d88");
         }
     }
 }

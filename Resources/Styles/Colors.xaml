@@ -19,6 +19,7 @@
 
     <Color x:Key="LightSecondaryBackground">#E0E0E0</Color>
     <Color x:Key="DarkSecondaryBackground">#222228</Color>
+    <Color x:Key="AccentOrange">#D96A47</Color>
 
     <Color x:Key="White">White</Color>
     <Color x:Key="Black">Black</Color>

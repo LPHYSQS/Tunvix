@@ -4,8 +4,8 @@
              xmlns:f="clr-namespace:Fonts"
              xmlns:models="clr-namespace:Tunvix.Models"
              xmlns:pageModels="clr-namespace:Tunvix.PageModels"
+             xmlns:behaviors="clr-namespace:Tunvix.Behaviors"
              xmlns:controls="clr-namespace:Tunvix.Pages.Controls"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="Tunvix.Pages.MainPage"
              x:DataType="pageModels:MainPageModel"
              x:Name="MainPageRoot"
@@ -537,8 +537,7 @@
                     <CollectionView x:Name="PlaylistCollectionView"
                                     Grid.Row="1"
                                     ItemsSource="{Binding Playlist}"
-                                    SelectionMode="Single"
-                                    SelectionChanged="OnPlaylistSelectionChanged"
+                                    SelectionMode="None"
                                     ItemSizingStrategy="MeasureFirstItem"
                                     Margin="0,0,0,8">
                         <CollectionView.EmptyView>
@@ -571,7 +570,17 @@
                                         Background="{AppThemeBinding Light={StaticResource LightListItemBackground}, Dark={StaticResource DarkListItemBackground}}"
                                         Stroke="{AppThemeBinding Light={StaticResource LightListItemStroke}, Dark={StaticResource DarkListItemStroke}}"
                                         StrokeThickness="1"
-                                        StrokeShape="RoundRectangle 24">
+                                        StrokeShape="RoundRectangle 24"
+                                        SemanticProperties.Hint="点按播放，长按移除">
+                                    <Border.Behaviors>
+                                        <behaviors:PlaylistItemInteractionBehavior Command="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.SelectTrackCommand}"
+                                                                                  CommandParameter="{Binding .}"
+                                                                                  LongPressCommand="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.RemoveTrackCommand}"
+                                                                                  LongPressCommandParameter="{Binding .}"
+                                                                                  LongPressDuration="650"
+                                                                                  PressedOpacity="0.96"
+                                                                                  PressedScale="0.99" />
+                                    </Border.Behaviors>
                                     <Border.Triggers>
                                         <DataTrigger TargetType="Border"
                                                      Binding="{Binding IsCurrent}"
@@ -583,31 +592,30 @@
                                         </DataTrigger>
                                     </Border.Triggers>
 
-                                    <Grid ColumnDefinitions="Auto,*,Auto"
-                                          ColumnSpacing="12">
-                                        <VerticalStackLayout WidthRequest="36"
-                                                             Spacing="4"
-                                                             VerticalOptions="Center">
+                                    <Grid ColumnDefinitions="40,*,Auto"
+                                          ColumnSpacing="14">
+                                        <Grid WidthRequest="40"
+                                              RowDefinitions="Auto,Auto"
+                                              RowSpacing="6"
+                                              VerticalOptions="Center">
                                             <Label Text="{Binding Badge}"
                                                    FontSize="12"
                                                    HorizontalTextAlignment="Center"
                                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
-                                            <Label Text="播"
-                                                   FontSize="10"
-                                                   HorizontalTextAlignment="Center"
-                                                   TextColor="{StaticResource AccentOrange}"
-                                                   IsVisible="{Binding IsPlayingCurrentTrack}" />
-                                        </VerticalStackLayout>
+                                            <controls:NowPlayingIndicatorView Grid.Row="1"
+                                                                              TrackKey="{Binding TrackKey}"
+                                                                              CurrentTrackKey="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.CurrentPlaybackTrackKey}"
+                                                                              IsPlaybackActive="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.IsPlaying}" />
+                                        </Grid>
 
                                         <VerticalStackLayout Grid.Column="1"
                                                              Spacing="4"
                                                              VerticalOptions="Center">
-                                            <Label Text="{Binding Title}"
-                                                   FontSize="17"
-                                                   FontAttributes="Bold"
-                                                   MaxLines="1"
-                                                   LineBreakMode="TailTruncation"
-                                                   TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                                            <controls:PlaylistTrackTitleView Text="{Binding Title}"
+                                                                             IsMarqueeActive="{Binding IsCurrent}"
+                                                                             TitleFontSize="17"
+                                                                             TitleFontAttributes="Bold"
+                                                                             TitleTextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
                                             <Label Text="{Binding Artist}"
                                                    FontSize="13"
                                                    MaxLines="1"
@@ -615,29 +623,16 @@
                                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                                         </VerticalStackLayout>
 
-                                        <VerticalStackLayout Grid.Column="2"
-                                                             Spacing="8"
-                                                             VerticalOptions="Center"
-                                                             HorizontalOptions="End">
+                                        <Grid Grid.Column="2"
+                                              RowDefinitions="Auto,*"
+                                              VerticalOptions="Fill"
+                                              HorizontalOptions="End">
                                             <Label Text="{Binding Duration}"
                                                    FontSize="12"
                                                    HorizontalTextAlignment="End"
+                                                   VerticalOptions="Start"
                                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
-                                            <Label Text="播放中"
-                                                   FontSize="11"
-                                                   HorizontalTextAlignment="End"
-                                                   TextColor="{StaticResource AccentOrange}"
-                                                   IsVisible="{Binding IsPlayingCurrentTrack}" />
-                                            <Button Text="移除"
-                                                    Padding="12,4"
-                                                    HeightRequest="32"
-                                                    FontSize="11"
-                                                    CornerRadius="16"
-                                                    BackgroundColor="{AppThemeBinding Light={StaticResource LightActivePillBackground}, Dark={StaticResource DarkActivePillBackground}}"
-                                                    TextColor="{StaticResource AccentOrange}"
-                                                    Command="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.RemoveTrackCommand}"
-                                                    CommandParameter="{Binding .}" />
-                                        </VerticalStackLayout>
+                                        </Grid>
                                     </Grid>
                                 </Border>
                             </DataTemplate>

@@ -79,9 +79,10 @@ namespace Tunvix.Pages.Controls
 
         private void UpdateVisualState()
         {
-            if (Dispatcher.IsDispatchRequired)
+            var dispatcher = Dispatcher;
+            if (dispatcher?.IsDispatchRequired == true)
             {
-                Dispatcher.Dispatch(UpdateVisualState);
+                dispatcher.Dispatch(UpdateVisualState);
                 return;
             }
 
