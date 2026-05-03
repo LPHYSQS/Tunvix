@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Tunvix.Models;
 using Tunvix.PageModels;
 
 namespace Tunvix.Pages
@@ -17,6 +18,7 @@ namespace Tunvix.Pages
             Loaded += OnPageLoaded;
             SizeChanged += OnPageSizeChanged;
             _model.PropertyChanged += OnModelPropertyChanged;
+            _model.LocateCurrentTrackRequested += OnLocateCurrentTrackRequested;
         }
 
         private async void OnPageLoaded(object? sender, EventArgs e)
@@ -109,6 +111,22 @@ namespace Tunvix.Pages
             {
                 _isAnimatingDrawer = false;
             }
+        }
+
+        private void OnLocateCurrentTrackRequested(MusicTrack track)
+        {
+            if (PlaylistCollectionView.ItemsSource is null)
+            {
+                return;
+            }
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                PlaylistCollectionView.ScrollTo(
+                    track,
+                    position: ScrollToPosition.Center,
+                    animate: false);
+            });
         }
     }
 }

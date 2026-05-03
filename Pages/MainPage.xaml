@@ -86,6 +86,12 @@
                              Size="20"
                              Color="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
 
+            <FontImageSource x:Key="LocateCurrentTrackIcon"
+                             Glyph="{x:Static f:FluentUI.location_arrow_20_regular}"
+                             FontFamily="{x:Static f:FluentUI.FontFamily}"
+                             Size="20"
+                             Color="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+
             <Style x:Key="SectionEyebrowStyle" TargetType="Label">
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="CharacterSpacing" Value="1.2" />
@@ -386,7 +392,7 @@
                     TranslationX="-420">
                 <Grid RowDefinitions="Auto,*"
                       RowSpacing="16">
-                    <Grid ColumnDefinitions="Auto,*,Auto"
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto"
                           ColumnSpacing="12">
                         <Border WidthRequest="42"
                                 HeightRequest="42"
@@ -422,6 +428,26 @@
                                 WidthRequest="42"
                                 HeightRequest="42"
                                 Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                                Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 21"
+                                IsEnabled="{Binding CanLocateCurrentTrack}"
+                                SemanticProperties.Description="定位当前播放歌曲">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding LocateCurrentTrackCommand}" />
+                            </Border.GestureRecognizers>
+                            <Image HeightRequest="20"
+                                   WidthRequest="20"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   Aspect="Center"
+                                   Source="{StaticResource LocateCurrentTrackIcon}" />
+                        </Border>
+
+                        <Border Grid.Column="3"
+                                WidthRequest="42"
+                                HeightRequest="42"
+                                Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
                                 Stroke="{StaticResource AccentOrange}"
                                 StrokeThickness="1"
                                 StrokeShape="RoundRectangle 21"
@@ -449,7 +475,8 @@
                         </Border>
                     </Grid>
 
-                    <CollectionView Grid.Row="1"
+                    <CollectionView x:Name="PlaylistCollectionView"
+                                    Grid.Row="1"
                                     ItemsSource="{Binding Playlist}"
                                     SelectionMode="None"
                                     ItemSizingStrategy="MeasureFirstItem"

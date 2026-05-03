@@ -93,6 +93,8 @@ namespace Tunvix.PageModels
             _audioPlayerService.PlaybackEnded += OnPlaybackEnded;
         }
 
+        public event Action<MusicTrack>? LocateCurrentTrackRequested;
+
         public string PlayPauseGlyph => IsPlaying
             ? FluentUI.pause_24_regular
             : FluentUI.play_24_regular;
@@ -120,6 +122,8 @@ namespace Tunvix.PageModels
         public string EmptyPlaylistTitle => "\u8fd8\u6ca1\u6709\u97f3\u9891";
 
         public string EmptyPlaylistSubtitle => "\u70b9\u51fb\u53f3\u4e0a\u89d2\u52a0\u53f7\uff0c\u4ece\u672c\u673a\u6216\u6307\u5b9a\u6587\u4ef6\u5939\u5bfc\u5165";
+
+        public bool CanLocateCurrentTrack => ResolveCurrentTrackInPlaylist() is not null;
 
         public string PlaybackModeLabel => PlaybackMode switch
         {
@@ -225,6 +229,8 @@ namespace Tunvix.PageModels
             OnPropertyChanged(nameof(CurrentPlaybackTime));
             OnPropertyChanged(nameof(TotalPlaybackTime));
             OnPropertyChanged(nameof(NowPlayingLabel));
+            OnPropertyChanged(nameof(CanLocateCurrentTrack));
+            LocateCurrentTrackCommand.NotifyCanExecuteChanged();
         }
 
         partial void OnIsPlayingChanged(bool value)
@@ -337,6 +343,23 @@ namespace Tunvix.PageModels
         [RelayCommand]
         private async Task NextTrackAsync() =>
             await MoveSelectionAsync(1);
+
+        [RelayCommand(CanExecute = nameof(CanLocateCurrentTrack))]
+        private void LocateCurrentTrack()
+        {
+            var track = ResolveCurrentTrackInPlaylist();
+            if (track is null)
+            {
+                return;
+            }
+
+            if (!ReferenceEquals(SelectedTrack, track))
+            {
+                SelectedTrack = track;
+            }
+
+            LocateCurrentTrackRequested?.Invoke(track);
+        }
 
         [RelayCommand]
         private void CyclePlaybackMode()
@@ -460,6 +483,8 @@ namespace Tunvix.PageModels
             OnPropertyChanged(nameof(CurrentPlaybackTime));
             OnPropertyChanged(nameof(TotalPlaybackTime));
             OnPropertyChanged(nameof(NowPlayingLabel));
+            OnPropertyChanged(nameof(CanLocateCurrentTrack));
+            LocateCurrentTrackCommand.NotifyCanExecuteChanged();
         }
 
         private MusicTrack CreateTrack(AudioTrackRecord record, int index)
@@ -629,6 +654,28 @@ namespace Tunvix.PageModels
                 .ToList();
 
             return candidates[_random.Next(candidates.Count)];
+        }
+
+        private MusicTrack? ResolveCurrentTrackInPlaylist()
+        {
+            if (Playlist.Count == 0
+                || SelectedTrack is null)
+            {
+                return null;
+            }
+
+            if (Playlist.Contains(SelectedTrack))
+            {
+                return SelectedTrack;
+            }
+
+            if (string.IsNullOrWhiteSpace(SelectedTrack.SourceUri))
+            {
+                return null;
+            }
+
+            return Playlist.FirstOrDefault(track =>
+                string.Equals(track.SourceUri, SelectedTrack.SourceUri, StringComparison.Ordinal));
         }
 
         private async Task RestorePlaybackStateAsync()
