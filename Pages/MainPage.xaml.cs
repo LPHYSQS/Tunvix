@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using Microsoft.Maui.Controls;
 using Tunvix.Models;
 using Tunvix.PageModels;
 using Tunvix.Services;
@@ -131,6 +132,26 @@ namespace Tunvix.Pages
                     position: ScrollToPosition.Center,
                     animate: false);
             });
+        }
+
+        private async void OnPlaylistSelectionChanged(object? sender, SelectionChangedEventArgs e)
+        {
+            try
+            {
+                if (e.CurrentSelection.FirstOrDefault() is not MusicTrack track)
+                {
+                    return;
+                }
+
+                await _model.SelectTrackCommand.ExecuteAsync(track);
+            }
+            finally
+            {
+                if (sender is CollectionView collectionView)
+                {
+                    collectionView.SelectedItem = null;
+                }
+            }
         }
 
         private async Task<PlaylistLoadStrategy?> OnPlaylistLoadStrategyRequestedAsync(PlaylistImportSource importSource)

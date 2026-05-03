@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:f="clr-namespace:Fonts"
@@ -147,7 +147,7 @@
                                 StrokeShape="RoundRectangle 23"
                                 HorizontalOptions="Start"
                                 VerticalOptions="Start"
-                                SemanticProperties.Description="打开播放列表">
+                                SemanticProperties.Description="鎵撳紑鎾斁鍒楄〃">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding OpenPlaylistDrawerCommand}" />
                             </Border.GestureRecognizers>
@@ -316,7 +316,7 @@
                                 Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                                 StrokeThickness="1"
                                 StrokeShape="RoundRectangle 29"
-                                SemanticProperties.Description="上一曲">
+                                SemanticProperties.Description="Previous track">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding PreviousTrackCommand}" />
                             </Border.GestureRecognizers>
@@ -333,7 +333,7 @@
                                 Background="{StaticResource AccentOrange}"
                                 StrokeThickness="0"
                                 StrokeShape="RoundRectangle 37"
-                                SemanticProperties.Description="播放或暂停">
+                                SemanticProperties.Description="Play or pause">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding TogglePlaybackCommand}" />
                             </Border.GestureRecognizers>
@@ -351,7 +351,7 @@
                                 Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                                 StrokeThickness="1"
                                 StrokeShape="RoundRectangle 29"
-                                SemanticProperties.Description="下一曲">
+                                SemanticProperties.Description="Next track">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding NextTrackCommand}" />
                             </Border.GestureRecognizers>
@@ -373,7 +373,7 @@
                                 MinimumTrackColor="{StaticResource AccentOrange}"
                                 MaximumTrackColor="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                                 ThumbColor="{StaticResource AccentOrange}"
-                                SemanticProperties.Description="播放进度" />
+                                SemanticProperties.Description="鎾斁杩涘害" />
                         <Grid ColumnDefinitions="*,*">
                             <Label Text="{Binding CurrentPlaybackTime}"
                                    FontSize="12"
@@ -390,7 +390,7 @@
                           ColumnDefinitions="Auto,*"
                           ColumnSpacing="12"
                           VerticalOptions="End">
-                        <Label Text="播放模式"
+                        <Label Text="鎾斁妯″紡"
                                VerticalOptions="Center"
                                FontSize="12"
                                CharacterSpacing="0.8"
@@ -459,7 +459,7 @@
                                 Stroke="{AppThemeBinding Light={StaticResource LightControlStroke}, Dark={StaticResource DarkControlStroke}}"
                                 StrokeThickness="1"
                                 StrokeShape="RoundRectangle 21"
-                                SemanticProperties.Description="收回播放列表">
+                                SemanticProperties.Description="鏀跺洖鎾斁鍒楄〃">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding ClosePlaylistDrawerCommand}" />
                             </Border.GestureRecognizers>
@@ -474,7 +474,7 @@
                         <VerticalStackLayout Grid.Column="1"
                                              Spacing="4"
                                              VerticalOptions="Center">
-                            <Label Text="播放列表"
+                            <Label Text="鎾斁鍒楄〃"
                                    FontSize="24"
                                    FontAttributes="Bold"
                                    TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
@@ -491,7 +491,7 @@
                                 StrokeThickness="1"
                                 StrokeShape="RoundRectangle 21"
                                 IsEnabled="{Binding CanLocateCurrentTrack}"
-                                SemanticProperties.Description="定位当前播放歌曲">
+                                SemanticProperties.Description="瀹氫綅褰撳墠鎾斁姝屾洸">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding LocateCurrentTrackCommand}" />
                             </Border.GestureRecognizers>
@@ -510,7 +510,7 @@
                                 Stroke="{StaticResource AccentOrange}"
                                 StrokeThickness="1"
                                 StrokeShape="RoundRectangle 21"
-                                SemanticProperties.Description="导入音频">
+                                SemanticProperties.Description="瀵煎叆闊抽">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding OpenImportOptionsCommand}" />
                             </Border.GestureRecognizers>
@@ -537,7 +537,8 @@
                     <CollectionView x:Name="PlaylistCollectionView"
                                     Grid.Row="1"
                                     ItemsSource="{Binding Playlist}"
-                                    SelectionMode="None"
+                                    SelectionMode="Single"
+                                    SelectionChanged="OnPlaylistSelectionChanged"
                                     ItemSizingStrategy="MeasureFirstItem"
                                     Margin="0,0,0,8">
                         <CollectionView.EmptyView>
@@ -566,29 +567,11 @@
                             <DataTemplate x:DataType="models:MusicTrack">
                                 <Border Margin="0,0,8,12"
                                         Padding="16,14"
-                                        HeightRequest="92"
+                                        HeightRequest="88"
                                         Background="{AppThemeBinding Light={StaticResource LightListItemBackground}, Dark={StaticResource DarkListItemBackground}}"
                                         Stroke="{AppThemeBinding Light={StaticResource LightListItemStroke}, Dark={StaticResource DarkListItemStroke}}"
                                         StrokeThickness="1"
                                         StrokeShape="RoundRectangle 24">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer
-                                            Command="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.SelectTrackCommand}"
-                                            CommandParameter="{Binding .}" />
-                                    </Border.GestureRecognizers>
-
-                                    <Border.Behaviors>
-                                        <toolkit:TouchBehavior
-                                            LongPressCommand="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.RemoveTrackCommand}"
-                                            LongPressCommandParameter="{Binding .}"
-                                            LongPressDuration="650"
-                                            PressedAnimationDuration="100"
-                                            DefaultAnimationDuration="100"
-                                            PressedScale="0.985"
-                                            PressedOpacity="0.96"
-                                            ShouldMakeChildrenInputTransparent="True" />
-                                    </Border.Behaviors>
-
                                     <Border.Triggers>
                                         <DataTrigger TargetType="Border"
                                                      Binding="{Binding IsCurrent}"
@@ -600,63 +583,31 @@
                                         </DataTrigger>
                                     </Border.Triggers>
 
-                                    <Grid ColumnDefinitions="14,54,*,Auto"
+                                    <Grid ColumnDefinitions="Auto,*,Auto"
                                           ColumnSpacing="12">
-                                        <controls:NowPlayingIndicatorView TrackKey="{Binding TrackKey}"
-                                                                          CurrentTrackKey="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.CurrentPlaybackTrackKey}"
-                                                                          IsPlaybackActive="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.IsPlaying}" />
-
-                                        <Border Grid.Column="1"
-                                                WidthRequest="54"
-                                                HeightRequest="54"
-                                                Background="{Binding AccentColor}"
-                                                StrokeThickness="0"
-                                                StrokeShape="RoundRectangle 18">
-                                            <Grid>
-                                                <Image Source="{Binding ArtworkSource}"
-                                                       Aspect="AspectFill"
-                                                       HorizontalOptions="Fill"
-                                                       VerticalOptions="Fill"
-                                                       IsVisible="True">
-                                                    <Image.Triggers>
-                                                        <DataTrigger TargetType="Image"
-                                                                     Binding="{Binding HasArtwork}"
-                                                                     Value="False">
-                                                            <Setter Property="IsVisible"
-                                                                    Value="False" />
-                                                        </DataTrigger>
-                                                    </Image.Triggers>
-                                                </Image>
-
-                                                <Label Text="{Binding ArtworkFallbackText}"
-                                                       HorizontalOptions="Center"
-                                                       VerticalOptions="Center"
-                                                       FontSize="18"
-                                                       FontAttributes="Bold"
-                                                       TextColor="{AppThemeBinding Light={StaticResource LightAccentCream}, Dark={StaticResource DarkAccentCream}}"
-                                                       IsVisible="True">
-                                                    <Label.Triggers>
-                                                        <DataTrigger TargetType="Label"
-                                                                     Binding="{Binding HasArtwork}"
-                                                                     Value="True">
-                                                            <Setter Property="IsVisible"
-                                                                    Value="False" />
-                                                        </DataTrigger>
-                                                    </Label.Triggers>
-                                                </Label>
-                                            </Grid>
-                                        </Border>
-
-                                        <VerticalStackLayout Grid.Column="2"
+                                        <VerticalStackLayout WidthRequest="36"
                                                              Spacing="4"
                                                              VerticalOptions="Center">
-                                            <controls:PlaylistTrackTitleView Text="{Binding Title}"
-                                                                             IsMarqueeActive="{Binding IsPlayingCurrentTrack}"
-                                                                             HeightRequest="24"
-                                                                             HorizontalOptions="Fill"
-                                                                             TitleFontSize="17"
-                                                                             TitleFontAttributes="Bold"
-                                                                             TitleTextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+                                            <Label Text="{Binding Badge}"
+                                                   FontSize="12"
+                                                   HorizontalTextAlignment="Center"
+                                                   TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                                            <Label Text="Now"
+                                                   FontSize="10"
+                                                   HorizontalTextAlignment="Center"
+                                                   TextColor="{StaticResource AccentOrange}"
+                                                   IsVisible="{Binding IsPlayingCurrentTrack}" />
+                                        </VerticalStackLayout>
+
+                                        <VerticalStackLayout Grid.Column="1"
+                                                             Spacing="4"
+                                                             VerticalOptions="Center">
+                                            <Label Text="{Binding Title}"
+                                                   FontSize="17"
+                                                   FontAttributes="Bold"
+                                                   MaxLines="1"
+                                                   LineBreakMode="TailTruncation"
+                                                   TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
                                             <Label Text="{Binding Artist}"
                                                    FontSize="13"
                                                    MaxLines="1"
@@ -664,23 +615,19 @@
                                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                                         </VerticalStackLayout>
 
-                                        <VerticalStackLayout Grid.Column="3"
+                                        <VerticalStackLayout Grid.Column="2"
                                                              Spacing="6"
                                                              VerticalOptions="Center"
                                                              HorizontalOptions="End">
                                             <Label Text="{Binding Duration}"
                                                    FontSize="12"
-                                                   TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}"
-                                                   HorizontalTextAlignment="End" />
-                                            <Border Padding="10,4"
-                                                    Background="{AppThemeBinding Light={StaticResource LightActivePillBackground}, Dark={StaticResource DarkActivePillBackground}}"
-                                                    StrokeThickness="0"
-                                                    StrokeShape="RoundRectangle 999"
-                                                    IsVisible="{Binding IsPlayingCurrentTrack}">
-                                                <Label Text="当前播放"
-                                                       FontSize="11"
-                                                       TextColor="{AppThemeBinding Light={StaticResource LightAccentCream}, Dark={StaticResource DarkAccentCream}}" />
-                                            </Border>
+                                                   HorizontalTextAlignment="End"
+                                                   TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
+                                            <Label Text="Playing"
+                                                   FontSize="11"
+                                                   HorizontalTextAlignment="End"
+                                                   TextColor="{StaticResource AccentOrange}"
+                                                   IsVisible="{Binding IsPlayingCurrentTrack}" />
                                         </VerticalStackLayout>
                                     </Grid>
                                 </Border>
@@ -706,11 +653,11 @@
                                 VerticalOptions="Center">
                             <VerticalStackLayout Spacing="14">
                                 <VerticalStackLayout Spacing="4">
-                                    <Label Text="导入音频"
+                                    <Label Text="瀵煎叆闊抽"
                                            FontSize="20"
                                            FontAttributes="Bold"
                                            TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
-                                    <Label Text="应用只会建立音频索引表，记录原始路径与播放地址，不会复制你的音频文件。"
+                                    <Label Text="The app only builds an audio index and does not copy your audio files."
                                            FontSize="13"
                                            TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                                 </VerticalStackLayout>
@@ -732,11 +679,11 @@
                                                TextColor="{StaticResource AccentOrange}" />
                                         <VerticalStackLayout Grid.Column="1"
                                                              Spacing="3">
-                                            <Label Text="加载本设备全部音频"
+                                            <Label Text="Import all device audio"
                                                    FontSize="15"
                                                    FontAttributes="Bold"
                                                    TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
-                                            <Label Text="读取系统媒体库，导入 Media3 可播放的本机音频索引。"
+                                            <Label Text="Read system media and import local audio that Media3 can play."
                                                    FontSize="12"
                                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                                         </VerticalStackLayout>
@@ -760,11 +707,11 @@
                                                TextColor="{StaticResource AccentOrange}" />
                                         <VerticalStackLayout Grid.Column="1"
                                                              Spacing="3">
-                                            <Label Text="加载指定文件夹音频"
+                                            <Label Text="Import from a folder"
                                                    FontSize="15"
                                                    FontAttributes="Bold"
                                                    TextColor="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
-                                            <Label Text="通过系统授权选择文件夹，只导入该目录下可识别的音频索引。"
+                                            <Label Text="Choose a folder through system permission and import recognizable audio from it."
                                                    FontSize="12"
                                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                                         </VerticalStackLayout>
@@ -790,7 +737,7 @@
                                 <ActivityIndicator IsRunning="True"
                                                    Color="{StaticResource AccentOrange}"
                                                    HorizontalOptions="Center" />
-                                <Label Text="正在建立音频索引"
+                                <Label Text="姝ｅ湪寤虹珛闊抽绱㈠紩"
                                        FontSize="18"
                                        FontAttributes="Bold"
                                        HorizontalTextAlignment="Center"
