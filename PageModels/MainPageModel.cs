@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Fonts;
@@ -26,6 +27,7 @@ namespace Tunvix.PageModels
         private readonly IPlaylistService _playlistService;
         private readonly IAudioPlayerService _audioPlayerService;
         private readonly IPlaybackStateService _playbackStateService;
+        private readonly IAudioMetadataService _audioMetadataService;
         private readonly IErrorHandler _errorHandler;
         private readonly Random _random = new();
         private readonly SemaphoreSlim _playbackMutationLock = new(1, 1);
@@ -39,6 +41,7 @@ namespace Tunvix.PageModels
         private long _lastPersistedPositionMilliseconds = -1;
         private bool? _lastPersistedIsPlaying;
         private string? _lastPersistedSourceUri;
+        private CancellationTokenSource? _artworkWarmupCancellationTokenSource;
 
         [ObservableProperty]
         private ObservableCollection<MusicTrack> _playlist = new();
@@ -79,6 +82,7 @@ namespace Tunvix.PageModels
             IPlaylistService playlistService,
             IAudioPlayerService audioPlayerService,
             IPlaybackStateService playbackStateService,
+            IAudioMetadataService audioMetadataService,
             IErrorHandler errorHandler)
         {
             _themeService = themeService;
@@ -86,6 +90,7 @@ namespace Tunvix.PageModels
             _playlistService = playlistService;
             _audioPlayerService = audioPlayerService;
             _playbackStateService = playbackStateService;
+            _audioMetadataService = audioMetadataService;
             _errorHandler = errorHandler;
 
             PlaybackMode = _playbackModeService.GetStoredMode();
@@ -157,6 +162,10 @@ namespace Tunvix.PageModels
 
         public string CurrentTrackArtist => SelectedTrack?.Artist ?? "\u8bf7\u5148\u5bfc\u5165\u97f3\u9891\u5230\u64ad\u653e\u5217\u8868";
 
+        public ImageSource? CurrentTrackArtworkSource => SelectedTrack?.ArtworkSource;
+
+        public bool HasCurrentTrackArtwork => SelectedTrack?.HasArtwork == true;
+
         public string CurrentPlaybackTime =>
             FormatPlaybackTime((int)Math.Round(_audioPlayerService.Position.TotalSeconds));
 
@@ -220,15 +229,18 @@ namespace Tunvix.PageModels
         {
             if (oldValue is not null)
             {
+                oldValue.PropertyChanged -= OnSelectedTrackPropertyChanged;
                 oldValue.IsCurrent = false;
                 oldValue.IsPlayingCurrentTrack = false;
             }
 
             if (newValue is not null)
             {
+                newValue.PropertyChanged += OnSelectedTrackPropertyChanged;
                 newValue.IsCurrent = true;
                 newValue.IsPlayingCurrentTrack = IsTrackCurrentlyPlaying(newValue);
                 _currentDurationMilliseconds = newValue.DurationMilliseconds;
+                _ = EnsureTrackArtworkLoadedAsync(newValue);
             }
             else
             {
@@ -237,6 +249,8 @@ namespace Tunvix.PageModels
 
             OnPropertyChanged(nameof(CurrentTrackTitle));
             OnPropertyChanged(nameof(CurrentTrackArtist));
+            OnPropertyChanged(nameof(CurrentTrackArtworkSource));
+            OnPropertyChanged(nameof(HasCurrentTrackArtwork));
             OnPropertyChanged(nameof(CurrentPlaybackTime));
             OnPropertyChanged(nameof(TotalPlaybackTime));
             OnPropertyChanged(nameof(NowPlayingLabel));
@@ -537,6 +551,7 @@ namespace Tunvix.PageModels
 
             nextSelection ??= Playlist.FirstOrDefault();
             SelectedTrack = nextSelection;
+            _audioMetadataService.TrimCache(Playlist.Select(track => track.Id).ToArray());
 
             if (shouldKeepPreparedState
                 && nextSelection is not null
@@ -569,6 +584,7 @@ namespace Tunvix.PageModels
 
             RefreshCurrentTrackPlaybackIndicators();
             RefreshPlaylistMetadata();
+            QueuePlaylistArtworkWarmup();
         }
 
         private async Task ApplyPlaylistChangeAsync(IReadOnlyList<AudioTrackRecord> records)
@@ -642,6 +658,8 @@ namespace Tunvix.PageModels
             OnPropertyChanged(nameof(IsPlaylistEmpty));
             OnPropertyChanged(nameof(EmptyPlaylistTitle));
             OnPropertyChanged(nameof(EmptyPlaylistSubtitle));
+            OnPropertyChanged(nameof(CurrentTrackArtworkSource));
+            OnPropertyChanged(nameof(HasCurrentTrackArtwork));
             OnPropertyChanged(nameof(CurrentPlaybackTime));
             OnPropertyChanged(nameof(TotalPlaybackTime));
             OnPropertyChanged(nameof(NowPlayingLabel));
@@ -703,6 +721,7 @@ namespace Tunvix.PageModels
                 Duration = FormatPlaybackTime((int)Math.Round(TimeSpan.FromMilliseconds(record.DurationMilliseconds).TotalSeconds)),
                 Badge = $"{index + 1:00}",
                 AccentColor = Color.FromArgb(AccentPalette[index % AccentPalette.Length]),
+                ArtworkFallbackText = BuildArtworkFallbackText(record.Title),
                 SourceUri = record.SourceUri,
                 SourcePath = record.SourcePath,
                 MimeType = record.MimeType
@@ -1033,6 +1052,143 @@ namespace Tunvix.PageModels
             && !string.IsNullOrWhiteSpace(CurrentPlaybackTrackKey)
             && string.Equals(track.TrackKey, CurrentPlaybackTrackKey, StringComparison.Ordinal);
 
+        private void OnSelectedTrackPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName is not nameof(MusicTrack.ArtworkSource) and not nameof(MusicTrack.HasArtwork))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(CurrentTrackArtworkSource));
+            OnPropertyChanged(nameof(HasCurrentTrackArtwork));
+        }
+
+        private void QueuePlaylistArtworkWarmup()
+        {
+            CancelArtworkWarmup();
+
+            if (Playlist.Count == 0)
+            {
+                return;
+            }
+
+            var cancellationTokenSource = new CancellationTokenSource();
+            _artworkWarmupCancellationTokenSource = cancellationTokenSource;
+            _ = WarmPlaylistArtworkAsync(Playlist.ToArray(), cancellationTokenSource);
+        }
+
+        private async Task WarmPlaylistArtworkAsync(
+            IReadOnlyList<MusicTrack> tracks,
+            CancellationTokenSource cancellationTokenSource)
+        {
+            try
+            {
+                if (SelectedTrack is not null)
+                {
+                    await EnsureTrackArtworkLoadedAsync(SelectedTrack, cancellationTokenSource.Token);
+                }
+
+                foreach (var track in tracks)
+                {
+                    cancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+                    if (ReferenceEquals(track, SelectedTrack))
+                    {
+                        continue;
+                    }
+
+                    await EnsureTrackArtworkLoadedAsync(track, cancellationTokenSource.Token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            finally
+            {
+                if (ReferenceEquals(_artworkWarmupCancellationTokenSource, cancellationTokenSource))
+                {
+                    _artworkWarmupCancellationTokenSource = null;
+                    cancellationTokenSource.Dispose();
+                }
+            }
+        }
+
+        private void CancelArtworkWarmup()
+        {
+            var cancellationTokenSource = _artworkWarmupCancellationTokenSource;
+            if (cancellationTokenSource is null)
+            {
+                return;
+            }
+
+            _artworkWarmupCancellationTokenSource = null;
+            cancellationTokenSource.Cancel();
+            cancellationTokenSource.Dispose();
+        }
+
+        private async Task EnsureTrackArtworkLoadedAsync(
+            MusicTrack? track,
+            CancellationToken cancellationToken = default)
+        {
+            if (track is null || track.IsArtworkLoaded)
+            {
+                return;
+            }
+
+            if (track.Id <= 0 || string.IsNullOrWhiteSpace(track.SourceUri))
+            {
+                await MainThread.InvokeOnMainThreadAsync(() => ApplyArtwork(track, null));
+                return;
+            }
+
+            try
+            {
+                var artwork = await _audioMetadataService.GetArtworkAsync(
+                    track.Id,
+                    track.SourceUri,
+                    track.SourcePath,
+                    track.MimeType,
+                    cancellationToken);
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                await MainThread.InvokeOnMainThreadAsync(() => ApplyArtwork(track, artwork));
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                await MainThread.InvokeOnMainThreadAsync(() => ApplyArtwork(track, null));
+            }
+        }
+
+        private static void ApplyArtwork(MusicTrack track, ImageSource? artwork)
+        {
+            track.ArtworkSource = artwork;
+            track.HasArtwork = artwork is not null;
+            track.IsArtworkLoaded = true;
+        }
+
+        private static string BuildArtworkFallbackText(string? title)
+        {
+            var trimmedTitle = title?.Trim();
+            if (string.IsNullOrWhiteSpace(trimmedTitle))
+            {
+                return "M";
+            }
+
+            return trimmedTitle[0].ToString().ToUpperInvariant();
+        }
+
         private static string FormatPlaybackTime(int totalSeconds)
         {
             totalSeconds = Math.Max(totalSeconds, 0);
@@ -1136,6 +1292,7 @@ namespace Tunvix.PageModels
             }
 
             Playlist.Remove(trackToRemove);
+            _audioMetadataService.RemoveFromCache(trackToRemove.Id);
             var nextTrack = GetFallbackTrackAfterRemoval(currentIndex);
             ReindexPlaylistBadges();
 
@@ -1165,6 +1322,7 @@ namespace Tunvix.PageModels
             }
 
             RefreshPlaylistMetadata();
+            QueuePlaylistArtworkWarmup();
             await RaiseFeedbackAsync($"\u5df2\u79fb\u9664\u300a{trackToRemove.Title}\u300b");
         }
 

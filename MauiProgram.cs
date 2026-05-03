@@ -58,6 +58,7 @@ namespace Tunvix
             builder.Services.AddSingleton<ThemeService>();
             builder.Services.AddSingleton<PlaybackModeService>();
             builder.Services.AddSingleton<IPlaybackStateService, PlaybackStateService>();
+            builder.Services.AddSingleton<IAudioMetadataService, AudioMetadataService>();
             builder.Services.AddSingleton<IPlaylistService, PlaylistService>();
 
 #if ANDROID

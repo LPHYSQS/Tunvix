@@ -32,6 +32,18 @@ namespace Tunvix.Models
         private string _mimeType = string.Empty;
 
         [ObservableProperty]
+        private ImageSource? _artworkSource;
+
+        [ObservableProperty]
+        private bool _hasArtwork;
+
+        [ObservableProperty]
+        private bool _isArtworkLoaded;
+
+        [ObservableProperty]
+        private string _artworkFallbackText = string.Empty;
+
+        [ObservableProperty]
         private long _durationMilliseconds;
 
         [ObservableProperty]

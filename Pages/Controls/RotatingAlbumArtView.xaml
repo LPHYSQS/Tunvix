@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Tunvix.Pages.Controls.RotatingAlbumArtView"
+             InputTransparent="True">
+
+    <Border x:Name="ArtworkBorder"
+            Background="{AppThemeBinding Light=#F2E7DA, Dark=#161C25}"
+            Stroke="{AppThemeBinding Light=#D3C6B8, Dark=#2E3440}"
+            StrokeThickness="1"
+            StrokeShape="RoundRectangle 999"
+            HorizontalOptions="Fill"
+            VerticalOptions="Fill">
+        <Image x:Name="ArtworkImage"
+               Aspect="AspectFill" />
+    </Border>
+</ContentView>

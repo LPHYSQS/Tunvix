@@ -260,14 +260,35 @@
                                         StrokeShape="RoundRectangle 82"
                                         HorizontalOptions="Center"
                                         VerticalOptions="Center" />
-                                <Border WidthRequest="104"
-                                        HeightRequest="104"
-                                        Background="{StaticResource VinylInner}"
-                                        Stroke="{StaticResource VinylInnerStroke}"
-                                        StrokeThickness="1"
-                                        StrokeShape="RoundRectangle 52"
-                                        HorizontalOptions="Center"
-                                        VerticalOptions="Center" />
+
+                                <Grid IsVisible="True">
+                                    <Grid.Triggers>
+                                        <DataTrigger TargetType="Grid"
+                                                     Binding="{Binding HasCurrentTrackArtwork}"
+                                                     Value="True">
+                                            <Setter Property="IsVisible"
+                                                    Value="False" />
+                                        </DataTrigger>
+                                    </Grid.Triggers>
+
+                                    <Border WidthRequest="104"
+                                            HeightRequest="104"
+                                            Background="{StaticResource VinylInner}"
+                                            Stroke="{StaticResource VinylInnerStroke}"
+                                            StrokeThickness="1"
+                                            StrokeShape="RoundRectangle 52"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center" />
+                                </Grid>
+
+                                <controls:RotatingAlbumArtView WidthRequest="118"
+                                                               HeightRequest="118"
+                                                               HorizontalOptions="Center"
+                                                               VerticalOptions="Center"
+                                                               ArtworkSource="{Binding CurrentTrackArtworkSource}"
+                                                               IsPlaying="{Binding IsPlaying}"
+                                                               IsVisible="{Binding HasCurrentTrackArtwork}" />
+
                                 <Border WidthRequest="40"
                                         HeightRequest="40"
                                         Background="{StaticResource VinylCenter}"
@@ -591,12 +612,39 @@
                                                 Background="{Binding AccentColor}"
                                                 StrokeThickness="0"
                                                 StrokeShape="RoundRectangle 18">
-                                            <Label Text="{Binding Badge}"
-                                                   HorizontalOptions="Center"
-                                                   VerticalOptions="Center"
-                                                   FontSize="16"
-                                                   FontAttributes="Bold"
-                                                   TextColor="{AppThemeBinding Light={StaticResource LightAccentCream}, Dark={StaticResource DarkAccentCream}}" />
+                                            <Grid>
+                                                <Image Source="{Binding ArtworkSource}"
+                                                       Aspect="AspectFill"
+                                                       HorizontalOptions="Fill"
+                                                       VerticalOptions="Fill"
+                                                       IsVisible="True">
+                                                    <Image.Triggers>
+                                                        <DataTrigger TargetType="Image"
+                                                                     Binding="{Binding HasArtwork}"
+                                                                     Value="False">
+                                                            <Setter Property="IsVisible"
+                                                                    Value="False" />
+                                                        </DataTrigger>
+                                                    </Image.Triggers>
+                                                </Image>
+
+                                                <Label Text="{Binding ArtworkFallbackText}"
+                                                       HorizontalOptions="Center"
+                                                       VerticalOptions="Center"
+                                                       FontSize="18"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{AppThemeBinding Light={StaticResource LightAccentCream}, Dark={StaticResource DarkAccentCream}}"
+                                                       IsVisible="True">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding HasArtwork}"
+                                                                     Value="True">
+                                                            <Setter Property="IsVisible"
+                                                                    Value="False" />
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </Grid>
                                         </Border>
 
                                         <VerticalStackLayout Grid.Column="2"
