@@ -5,6 +5,7 @@
              xmlns:models="clr-namespace:Tunvix.Models"
              xmlns:pageModels="clr-namespace:Tunvix.PageModels"
              xmlns:controls="clr-namespace:Tunvix.Pages.Controls"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="Tunvix.Pages.MainPage"
              x:DataType="pageModels:MainPageModel"
              x:Name="MainPageRoot"
@@ -517,6 +518,18 @@
                                             Command="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.SelectTrackCommand}"
                                             CommandParameter="{Binding .}" />
                                     </Border.GestureRecognizers>
+
+                                    <Border.Behaviors>
+                                        <toolkit:TouchBehavior
+                                            LongPressCommand="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.RemoveTrackCommand}"
+                                            LongPressCommandParameter="{Binding .}"
+                                            LongPressDuration="650"
+                                            PressedAnimationDuration="100"
+                                            DefaultAnimationDuration="100"
+                                            PressedScale="0.985"
+                                            PressedOpacity="0.96"
+                                            ShouldMakeChildrenInputTransparent="True" />
+                                    </Border.Behaviors>
 
                                     <Border.Triggers>
                                         <DataTrigger TargetType="Border"

@@ -8,6 +8,9 @@ namespace Tunvix.Models
         private int _id;
 
         [ObservableProperty]
+        private string _trackKey = string.Empty;
+
+        [ObservableProperty]
         private string _title = string.Empty;
 
         [ObservableProperty]

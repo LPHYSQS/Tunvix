@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Tunvix.Models;
 using Tunvix.PageModels;
+using Tunvix.Services;
 
 namespace Tunvix.Pages
 {
@@ -19,6 +20,8 @@ namespace Tunvix.Pages
             SizeChanged += OnPageSizeChanged;
             _model.PropertyChanged += OnModelPropertyChanged;
             _model.LocateCurrentTrackRequested += OnLocateCurrentTrackRequested;
+            _model.PlaylistLoadStrategyRequested += OnPlaylistLoadStrategyRequestedAsync;
+            _model.FeedbackRequested += OnFeedbackRequestedAsync;
         }
 
         private async void OnPageLoaded(object? sender, EventArgs e)
@@ -127,6 +130,36 @@ namespace Tunvix.Pages
                     position: ScrollToPosition.Center,
                     animate: false);
             });
+        }
+
+        private async Task<PlaylistLoadStrategy?> OnPlaylistLoadStrategyRequestedAsync(PlaylistImportSource importSource)
+        {
+            var action = await DisplayActionSheetAsync(
+                importSource == PlaylistImportSource.DeviceLibrary
+                    ? "当前播放列表已有歌曲，选择设备音频加载方式"
+                    : "当前播放列表已有歌曲，选择文件夹音频加载方式",
+                "取消",
+                null,
+                "增量加载",
+                "完全覆盖");
+
+            return action switch
+            {
+                "增量加载" => PlaylistLoadStrategy.Incremental,
+                "完全覆盖" => PlaylistLoadStrategy.ReplaceAll,
+                _ => null
+            };
+        }
+
+        private async Task OnFeedbackRequestedAsync(string message)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                await AppShell.DisplaySnackbarAsync(message);
+                return;
+            }
+
+            await AppShell.DisplayToastAsync(message);
         }
     }
 }

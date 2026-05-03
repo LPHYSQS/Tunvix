@@ -4,6 +4,8 @@ namespace Tunvix.Models
     {
         public int ID { get; set; }
 
+        public string TrackKey { get; set; } = string.Empty;
+
         public string Title { get; set; } = string.Empty;
 
         public string Artist { get; set; } = string.Empty;

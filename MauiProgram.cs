@@ -51,12 +51,14 @@ namespace Tunvix
             builder.Services.AddSingleton<CategoryRepository>();
             builder.Services.AddSingleton<TagRepository>();
             builder.Services.AddSingleton<AudioTrackRepository>();
+            builder.Services.AddSingleton<RemovedSongRepository>();
             builder.Services.AddSingleton<SeedDataService>();
             builder.Services.AddSingleton<ModalErrorHandler>();
             builder.Services.AddSingleton<IErrorHandler>(serviceProvider => serviceProvider.GetRequiredService<ModalErrorHandler>());
             builder.Services.AddSingleton<ThemeService>();
             builder.Services.AddSingleton<PlaybackModeService>();
             builder.Services.AddSingleton<IPlaybackStateService, PlaybackStateService>();
+            builder.Services.AddSingleton<IPlaylistService, PlaylistService>();
 
 #if ANDROID
             builder.Services.AddSingleton<IAndroidFolderPickerService, AndroidFolderPickerService>();
