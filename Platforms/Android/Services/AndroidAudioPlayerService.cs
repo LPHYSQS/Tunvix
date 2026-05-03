@@ -25,6 +25,8 @@ namespace Tunvix.Platforms.Android.Services
 
         public event EventHandler? PlaybackEnded;
 
+        public string? CurrentTrackKey { get; private set; }
+
         public bool IsPlaying => _player.IsPlaying;
 
         public TimeSpan Position => TimeSpan.FromMilliseconds(Math.Max(_player.CurrentPosition, 0));
@@ -33,10 +35,11 @@ namespace Tunvix.Platforms.Android.Services
             ? TimeSpan.FromMilliseconds(_player.Duration)
             : TimeSpan.Zero;
 
-        public async Task LoadAsync(string sourceUri, CancellationToken cancellationToken = default)
+        public async Task LoadAsync(string trackKey, string sourceUri, CancellationToken cancellationToken = default)
         {
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
+                CurrentTrackKey = NormalizeTrackKey(trackKey);
                 _player.SetMediaItem(MediaItem.FromUri(AndroidUri.Parse(sourceUri)));
                 _player.Prepare();
                 _player.Pause();
@@ -45,10 +48,11 @@ namespace Tunvix.Platforms.Android.Services
             });
         }
 
-        public async Task PlayAsync(string sourceUri, CancellationToken cancellationToken = default)
+        public async Task PlayAsync(string trackKey, string sourceUri, CancellationToken cancellationToken = default)
         {
             await MainThread.InvokeOnMainThreadAsync(() =>
             {
+                CurrentTrackKey = NormalizeTrackKey(trackKey);
                 _player.SetMediaItem(MediaItem.FromUri(AndroidUri.Parse(sourceUri)));
                 _player.Prepare();
                 _player.Play();
@@ -93,6 +97,7 @@ namespace Tunvix.Platforms.Android.Services
             {
                 _player.Stop();
                 _playbackEndedRaised = false;
+                CurrentTrackKey = null;
                 RaisePlaybackStateChanged();
             });
         }
@@ -144,5 +149,10 @@ namespace Tunvix.Platforms.Android.Services
             PlaybackStateChanged?.Invoke(
                 this,
                 new AudioPlaybackStateChangedEventArgs(IsPlaying, Position, Duration));
+
+        private static string? NormalizeTrackKey(string trackKey) =>
+            string.IsNullOrWhiteSpace(trackKey)
+                ? null
+                : trackKey;
     }
 }

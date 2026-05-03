@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Tunvix.Pages.Controls.NowPlayingIndicatorView"
+             InputTransparent="True">
+
+    <Grid x:Name="IndicatorRoot"
+          WidthRequest="14"
+          HeightRequest="26"
+          ColumnDefinitions="Auto,Auto,Auto"
+          ColumnSpacing="2"
+          HorizontalOptions="Center"
+          VerticalOptions="Center"
+          Opacity="0">
+        <Border x:Name="BarOne"
+                WidthRequest="3"
+                HeightRequest="12"
+                AnchorY="1"
+                Background="{StaticResource AccentOrange}"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 999"
+                VerticalOptions="End" />
+        <Border x:Name="BarTwo"
+                Grid.Column="1"
+                WidthRequest="3"
+                HeightRequest="16"
+                AnchorY="1"
+                Background="{StaticResource AccentOrange}"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 999"
+                VerticalOptions="End" />
+        <Border x:Name="BarThree"
+                Grid.Column="2"
+                WidthRequest="3"
+                HeightRequest="10"
+                AnchorY="1"
+                Background="{StaticResource AccentOrange}"
+                StrokeThickness="0"
+                StrokeShape="RoundRectangle 999"
+                VerticalOptions="End" />
+    </Grid>
+</ContentView>

@@ -93,6 +93,12 @@
                              Size="20"
                              Color="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
 
+            <FontImageSource x:Key="RemoveCurrentTrackIcon"
+                             Glyph="{x:Static f:FluentUI.delete_20_regular}"
+                             FontFamily="{x:Static f:FluentUI.FontFamily}"
+                             Size="20"
+                             Color="{AppThemeBinding Light={StaticResource LightPrimaryText}, Dark={StaticResource DarkPrimaryText}}" />
+
             <Style x:Key="SectionEyebrowStyle" TargetType="Label">
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="CharacterSpacing" Value="1.2" />
@@ -132,7 +138,7 @@
 
                 <Grid RowDefinitions="Auto,*,Auto,Auto,Auto"
                       RowSpacing="16">
-                    <Grid ColumnDefinitions="46,*,46">
+                    <Grid ColumnDefinitions="46,*,Auto">
                         <Border WidthRequest="46"
                                 HeightRequest="46"
                                 Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
@@ -173,35 +179,66 @@
                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                         </VerticalStackLayout>
 
-                        <Border Grid.Column="2"
-                                WidthRequest="46"
-                                HeightRequest="46"
-                                Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
-                                Stroke="{StaticResource AccentOrange}"
-                                StrokeThickness="1"
-                                StrokeShape="RoundRectangle 23"
-                                HorizontalOptions="End"
-                                VerticalOptions="Start"
-                                SemanticProperties.Description="{Binding ThemeButtonDescription}">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding ToggleThemeCommand}" />
-                            </Border.GestureRecognizers>
-                            <Image HeightRequest="20"
-                                   WidthRequest="20"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center"
-                                   Aspect="Center"
-                                   Source="{StaticResource ToggleThemeDarkIcon}">
-                                <Image.Triggers>
-                                    <DataTrigger TargetType="Image"
-                                                 Binding="{Binding IsDarkTheme}"
-                                                 Value="True">
-                                        <Setter Property="Source"
-                                                Value="{StaticResource ToggleThemeLightIcon}" />
+                        <HorizontalStackLayout Grid.Column="2"
+                                               Spacing="10"
+                                               HorizontalOptions="End"
+                                               VerticalOptions="Start">
+                            <Border WidthRequest="46"
+                                    HeightRequest="46"
+                                    Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                                    Stroke="{StaticResource AccentOrange}"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 23"
+                                    IsEnabled="{Binding CanRemoveCurrentTrack}"
+                                    SemanticProperties.Description="Remove current track">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding RemoveCurrentTrackCommand}" />
+                                </Border.GestureRecognizers>
+                                <Image HeightRequest="20"
+                                       WidthRequest="20"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       Aspect="Center"
+                                       Source="{StaticResource RemoveCurrentTrackIcon}" />
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border"
+                                                 Binding="{Binding CanRemoveCurrentTrack}"
+                                                 Value="False">
+                                        <Setter Property="InputTransparent"
+                                                Value="True" />
+                                        <Setter Property="Opacity"
+                                                Value="0.45" />
                                     </DataTrigger>
-                                </Image.Triggers>
-                            </Image>
-                        </Border>
+                                </Border.Triggers>
+                            </Border>
+
+                            <Border WidthRequest="46"
+                                    HeightRequest="46"
+                                    Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                                    Stroke="{StaticResource AccentOrange}"
+                                    StrokeThickness="1"
+                                    StrokeShape="RoundRectangle 23"
+                                    SemanticProperties.Description="{Binding ThemeButtonDescription}">
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding ToggleThemeCommand}" />
+                                </Border.GestureRecognizers>
+                                <Image HeightRequest="20"
+                                       WidthRequest="20"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       Aspect="Center"
+                                       Source="{StaticResource ToggleThemeDarkIcon}">
+                                    <Image.Triggers>
+                                        <DataTrigger TargetType="Image"
+                                                     Binding="{Binding IsDarkTheme}"
+                                                     Value="True">
+                                            <Setter Property="Source"
+                                                    Value="{StaticResource ToggleThemeLightIcon}" />
+                                        </DataTrigger>
+                                    </Image.Triggers>
+                                </Image>
+                            </Border>
+                        </HorizontalStackLayout>
                     </Grid>
 
                     <Grid Grid.Row="1"
@@ -542,9 +579,14 @@
                                         </DataTrigger>
                                     </Border.Triggers>
 
-                                    <Grid ColumnDefinitions="54,*,Auto"
-                                          ColumnSpacing="14">
-                                        <Border WidthRequest="54"
+                                    <Grid ColumnDefinitions="14,54,*,Auto"
+                                          ColumnSpacing="12">
+                                        <controls:NowPlayingIndicatorView TrackKey="{Binding TrackKey}"
+                                                                          CurrentTrackKey="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.CurrentPlaybackTrackKey}"
+                                                                          IsPlaybackActive="{Binding Source={x:Reference MainPageRoot}, Path=BindingContext.IsPlaying}" />
+
+                                        <Border Grid.Column="1"
+                                                WidthRequest="54"
                                                 HeightRequest="54"
                                                 Background="{Binding AccentColor}"
                                                 StrokeThickness="0"
@@ -557,7 +599,7 @@
                                                    TextColor="{AppThemeBinding Light={StaticResource LightAccentCream}, Dark={StaticResource DarkAccentCream}}" />
                                         </Border>
 
-                                        <VerticalStackLayout Grid.Column="1"
+                                        <VerticalStackLayout Grid.Column="2"
                                                              Spacing="4"
                                                              VerticalOptions="Center">
                                             <controls:PlaylistTrackTitleView Text="{Binding Title}"
@@ -574,7 +616,7 @@
                                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                                         </VerticalStackLayout>
 
-                                        <VerticalStackLayout Grid.Column="2"
+                                        <VerticalStackLayout Grid.Column="3"
                                                              Spacing="6"
                                                              VerticalOptions="Center"
                                                              HorizontalOptions="End">

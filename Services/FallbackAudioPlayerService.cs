@@ -12,12 +12,15 @@ namespace Tunvix.Services
 
         public bool IsPlaying { get; private set; }
 
+        public string? CurrentTrackKey { get; private set; }
+
         public TimeSpan Position { get; private set; }
 
         public TimeSpan Duration { get; private set; }
 
-        public Task LoadAsync(string sourceUri, CancellationToken cancellationToken = default)
+        public Task LoadAsync(string trackKey, string sourceUri, CancellationToken cancellationToken = default)
         {
+            CurrentTrackKey = NormalizeTrackKey(trackKey);
             IsPlaying = false;
             Position = TimeSpan.Zero;
             PlaybackStateChanged?.Invoke(
@@ -26,8 +29,9 @@ namespace Tunvix.Services
             return Task.CompletedTask;
         }
 
-        public Task PlayAsync(string sourceUri, CancellationToken cancellationToken = default)
+        public Task PlayAsync(string trackKey, string sourceUri, CancellationToken cancellationToken = default)
         {
+            CurrentTrackKey = NormalizeTrackKey(trackKey);
             IsPlaying = true;
             PlaybackStateChanged?.Invoke(
                 this,
@@ -66,10 +70,16 @@ namespace Tunvix.Services
         {
             IsPlaying = false;
             Position = TimeSpan.Zero;
+            CurrentTrackKey = null;
             PlaybackStateChanged?.Invoke(
                 this,
                 new AudioPlaybackStateChangedEventArgs(IsPlaying, Position, Duration));
             return Task.CompletedTask;
         }
+
+        private static string? NormalizeTrackKey(string trackKey) =>
+            string.IsNullOrWhiteSpace(trackKey)
+                ? null
+                : trackKey;
     }
 }

@@ -6,15 +6,17 @@ namespace Tunvix.Services
 
         event EventHandler? PlaybackEnded;
 
+        string? CurrentTrackKey { get; }
+
         bool IsPlaying { get; }
 
         TimeSpan Position { get; }
 
         TimeSpan Duration { get; }
 
-        Task LoadAsync(string sourceUri, CancellationToken cancellationToken = default);
+        Task LoadAsync(string trackKey, string sourceUri, CancellationToken cancellationToken = default);
 
-        Task PlayAsync(string sourceUri, CancellationToken cancellationToken = default);
+        Task PlayAsync(string trackKey, string sourceUri, CancellationToken cancellationToken = default);
 
         Task PauseAsync(CancellationToken cancellationToken = default);
 

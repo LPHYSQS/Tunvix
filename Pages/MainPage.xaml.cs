@@ -21,6 +21,7 @@ namespace Tunvix.Pages
             _model.PropertyChanged += OnModelPropertyChanged;
             _model.LocateCurrentTrackRequested += OnLocateCurrentTrackRequested;
             _model.PlaylistLoadStrategyRequested += OnPlaylistLoadStrategyRequestedAsync;
+            _model.TrackRemovalConfirmationRequested += OnTrackRemovalConfirmationRequestedAsync;
             _model.FeedbackRequested += OnFeedbackRequestedAsync;
         }
 
@@ -160,6 +161,31 @@ namespace Tunvix.Pages
             }
 
             await AppShell.DisplayToastAsync(message);
+        }
+
+        private Task<bool> OnTrackRemovalConfirmationRequestedAsync(MusicTrack track)
+        {
+            var isCurrentTrack = !string.IsNullOrWhiteSpace(_model.CurrentPlaybackTrackKey)
+                && string.Equals(track.TrackKey, _model.CurrentPlaybackTrackKey, StringComparison.Ordinal);
+
+            if (!isCurrentTrack && _model.SelectedTrack is not null)
+            {
+                isCurrentTrack = string.Equals(track.TrackKey, _model.SelectedTrack.TrackKey, StringComparison.Ordinal)
+                    || (!string.IsNullOrWhiteSpace(track.SourceUri)
+                        && string.Equals(track.SourceUri, _model.SelectedTrack.SourceUri, StringComparison.Ordinal));
+            }
+
+            var message = isCurrentTrack
+                ? "\u662f\u5426\u4ece\u64ad\u653e\u5217\u8868\u4e2d\u79fb\u9664\u5f53\u524d\u6b4c\u66f2\uff1f"
+                : string.IsNullOrWhiteSpace(track.Title)
+                    ? "\u662f\u5426\u4ece\u64ad\u653e\u5217\u8868\u4e2d\u79fb\u9664\u8fd9\u9996\u6b4c\u66f2\uff1f"
+                    : $"\u662f\u5426\u4ece\u64ad\u653e\u5217\u8868\u4e2d\u79fb\u9664\u300a{track.Title}\u300b\uff1f";
+
+            return DisplayAlertAsync(
+                "\u79fb\u9664\u6b4c\u66f2",
+                message,
+                "\u786e\u8ba4",
+                "\u53d6\u6d88");
         }
     }
 }
