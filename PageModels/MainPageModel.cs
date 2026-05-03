@@ -12,6 +12,8 @@ namespace Tunvix.PageModels
 {
     public partial class MainPageModel : ObservableObject
     {
+        private const int MaxPlaylistArtworkWarmupCount = 12;
+
         private static readonly string[] AccentPalette =
         {
             "#D96A47",
@@ -39,6 +41,7 @@ namespace Tunvix.PageModels
         private bool _hasPreparedTrack;
         private long _currentDurationMilliseconds;
         private long _lastPersistedPositionMilliseconds = -1;
+        private long _pendingRestoredPositionMilliseconds = -1;
         private bool? _lastPersistedIsPlaying;
         private string? _lastPersistedSourceUri;
         private CancellationTokenSource? _artworkWarmupCancellationTokenSource;
@@ -167,7 +170,7 @@ namespace Tunvix.PageModels
         public bool HasCurrentTrackArtwork => SelectedTrack?.HasArtwork == true;
 
         public string CurrentPlaybackTime =>
-            FormatPlaybackTime((int)Math.Round(_audioPlayerService.Position.TotalSeconds));
+            FormatPlaybackTime((int)Math.Round(TimeSpan.FromMilliseconds(GetDisplayPositionMilliseconds()).TotalSeconds));
 
         public string TotalPlaybackTime =>
             FormatPlaybackTime((int)Math.Round(TimeSpan.FromMilliseconds(_currentDurationMilliseconds).TotalSeconds));
@@ -806,8 +809,20 @@ namespace Tunvix.PageModels
                     }
                 }
 
-                var ratio = e.Duration > TimeSpan.Zero
-                    ? e.Position.TotalMilliseconds / e.Duration.TotalMilliseconds
+                var effectiveDurationMilliseconds = e.Duration > TimeSpan.Zero
+                    ? e.Duration.TotalMilliseconds
+                    : Math.Max(_currentDurationMilliseconds, 0);
+                var effectivePositionMilliseconds = Math.Max(e.Position.TotalMilliseconds, 0);
+
+                if (_pendingRestoredPositionMilliseconds >= 0)
+                {
+                    effectivePositionMilliseconds = Math.Max(
+                        effectivePositionMilliseconds,
+                        _pendingRestoredPositionMilliseconds);
+                }
+
+                var ratio = effectiveDurationMilliseconds > 0
+                    ? effectivePositionMilliseconds / effectiveDurationMilliseconds
                     : 0;
 
                 _isUpdatingProgressFromPlayer = true;
@@ -989,16 +1004,25 @@ namespace Tunvix.PageModels
                 : 0;
             _isUpdatingProgressFromPlayer = false;
 
-            await _audioPlayerService.LoadAsync(track.TrackKey, track.SourceUri);
+            _pendingRestoredPositionMilliseconds = targetPosition;
 
-            if (targetPosition > 0)
+            try
             {
-                await _audioPlayerService.SeekAsync(TimeSpan.FromMilliseconds(targetPosition));
+                await _audioPlayerService.LoadAsync(track.TrackKey, track.SourceUri);
+
+                if (targetPosition > 0)
+                {
+                    await _audioPlayerService.SeekAsync(TimeSpan.FromMilliseconds(targetPosition));
+                }
+
+                if (snapshot.ShouldResumePlayback)
+                {
+                    await _audioPlayerService.ResumeAsync();
+                }
             }
-
-            if (snapshot.ShouldResumePlayback)
+            finally
             {
-                await _audioPlayerService.ResumeAsync();
+                _pendingRestoredPositionMilliseconds = -1;
             }
 
             _hasPreparedTrack = true;
@@ -1012,7 +1036,7 @@ namespace Tunvix.PageModels
 
         private long GetCurrentPositionMilliseconds()
         {
-            var positionMilliseconds = (long)Math.Max(_audioPlayerService.Position.TotalMilliseconds, 0);
+            var positionMilliseconds = GetDisplayPositionMilliseconds();
             var durationMilliseconds = _audioPlayerService.Duration > TimeSpan.Zero
                 ? (long)_audioPlayerService.Duration.TotalMilliseconds
                 : _currentDurationMilliseconds;
@@ -1020,6 +1044,27 @@ namespace Tunvix.PageModels
             return durationMilliseconds > 0
                 ? Math.Min(positionMilliseconds, durationMilliseconds)
                 : positionMilliseconds;
+        }
+
+        private long GetDisplayPositionMilliseconds()
+        {
+            var playerPositionMilliseconds = (long)Math.Max(_audioPlayerService.Position.TotalMilliseconds, 0);
+            if (playerPositionMilliseconds > 0)
+            {
+                return playerPositionMilliseconds;
+            }
+
+            if (_pendingRestoredPositionMilliseconds >= 0)
+            {
+                return _pendingRestoredPositionMilliseconds;
+            }
+
+            if (_currentDurationMilliseconds > 0 && PlaybackProgress > 0)
+            {
+                return (long)Math.Round(_currentDurationMilliseconds * PlaybackProgress);
+            }
+
+            return 0;
         }
 
         private void ClearPersistedPlaybackState()
@@ -1072,9 +1117,35 @@ namespace Tunvix.PageModels
                 return;
             }
 
+            var tracksToWarm = new List<MusicTrack>(Math.Min(Playlist.Count, MaxPlaylistArtworkWarmupCount));
+            if (SelectedTrack is not null)
+            {
+                tracksToWarm.Add(SelectedTrack);
+            }
+
+            foreach (var track in Playlist)
+            {
+                if (tracksToWarm.Count >= MaxPlaylistArtworkWarmupCount)
+                {
+                    break;
+                }
+
+                if (ReferenceEquals(track, SelectedTrack))
+                {
+                    continue;
+                }
+
+                tracksToWarm.Add(track);
+            }
+
+            if (tracksToWarm.Count == 0)
+            {
+                return;
+            }
+
             var cancellationTokenSource = new CancellationTokenSource();
             _artworkWarmupCancellationTokenSource = cancellationTokenSource;
-            _ = WarmPlaylistArtworkAsync(Playlist.ToArray(), cancellationTokenSource);
+            _ = WarmPlaylistArtworkAsync(tracksToWarm, cancellationTokenSource);
         }
 
         private async Task WarmPlaylistArtworkAsync(

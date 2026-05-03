@@ -9,7 +9,7 @@ namespace Tunvix.Services
 {
     public sealed class AudioMetadataService : IAudioMetadataService
     {
-        private const int MaxArtworkEdge = 512;
+        private const int MaxArtworkEdge = 256;
 
         private readonly ILogger<AudioMetadataService> _logger;
         private readonly Dictionary<int, ImageSource?> _artworkCache = new();
