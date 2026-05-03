@@ -138,13 +138,16 @@
 
                 <Grid RowDefinitions="Auto,*,Auto,Auto,Auto"
                       RowSpacing="16">
-                    <Grid ColumnDefinitions="46,*,Auto">
+                    <Grid ColumnDefinitions="46,*,Auto"
+                          RowDefinitions="Auto,Auto"
+                          RowSpacing="12">
                         <Border WidthRequest="46"
                                 HeightRequest="46"
                                 Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
                                 Stroke="{StaticResource AccentOrange}"
                                 StrokeThickness="1"
                                 StrokeShape="RoundRectangle 23"
+                                Grid.RowSpan="2"
                                 HorizontalOptions="Start"
                                 VerticalOptions="Start"
                                 SemanticProperties.Description="打开播放列表">
@@ -160,6 +163,7 @@
                         </Border>
 
                         <VerticalStackLayout Grid.Column="1"
+                                             Grid.RowSpan="2"
                                              Spacing="6">
                             <Label Text="{Binding NowPlayingLabel}"
                                    Style="{StaticResource SectionEyebrowStyle}"
@@ -179,66 +183,68 @@
                                    TextColor="{AppThemeBinding Light={StaticResource LightSecondaryText}, Dark={StaticResource DarkSecondaryText}}" />
                         </VerticalStackLayout>
 
-                        <HorizontalStackLayout Grid.Column="2"
-                                               Spacing="10"
-                                               HorizontalOptions="End"
-                                               VerticalOptions="Start">
-                            <Border WidthRequest="46"
-                                    HeightRequest="46"
-                                    Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
-                                    Stroke="{StaticResource AccentOrange}"
-                                    StrokeThickness="1"
-                                    StrokeShape="RoundRectangle 23"
-                                    IsEnabled="{Binding CanRemoveCurrentTrack}"
-                                    SemanticProperties.Description="Remove current track">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding RemoveCurrentTrackCommand}" />
-                                </Border.GestureRecognizers>
-                                <Image HeightRequest="20"
-                                       WidthRequest="20"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Center"
-                                       Aspect="Center"
-                                       Source="{StaticResource RemoveCurrentTrackIcon}" />
-                                <Border.Triggers>
-                                    <DataTrigger TargetType="Border"
-                                                 Binding="{Binding CanRemoveCurrentTrack}"
-                                                 Value="False">
-                                        <Setter Property="InputTransparent"
-                                                Value="True" />
-                                        <Setter Property="Opacity"
-                                                Value="0.45" />
+                        <Border Grid.Column="2"
+                                WidthRequest="46"
+                                HeightRequest="46"
+                                Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                                Stroke="{StaticResource AccentOrange}"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 23"
+                                HorizontalOptions="End"
+                                VerticalOptions="Start"
+                                SemanticProperties.Description="{Binding ThemeButtonDescription}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ToggleThemeCommand}" />
+                            </Border.GestureRecognizers>
+                            <Image HeightRequest="20"
+                                   WidthRequest="20"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   Aspect="Center"
+                                   Source="{StaticResource ToggleThemeDarkIcon}">
+                                <Image.Triggers>
+                                    <DataTrigger TargetType="Image"
+                                                 Binding="{Binding IsDarkTheme}"
+                                                 Value="True">
+                                        <Setter Property="Source"
+                                                Value="{StaticResource ToggleThemeLightIcon}" />
                                     </DataTrigger>
-                                </Border.Triggers>
-                            </Border>
+                                </Image.Triggers>
+                            </Image>
+                        </Border>
 
-                            <Border WidthRequest="46"
-                                    HeightRequest="46"
-                                    Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
-                                    Stroke="{StaticResource AccentOrange}"
-                                    StrokeThickness="1"
-                                    StrokeShape="RoundRectangle 23"
-                                    SemanticProperties.Description="{Binding ThemeButtonDescription}">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding ToggleThemeCommand}" />
-                                </Border.GestureRecognizers>
-                                <Image HeightRequest="20"
-                                       WidthRequest="20"
-                                       HorizontalOptions="Center"
-                                       VerticalOptions="Center"
-                                       Aspect="Center"
-                                       Source="{StaticResource ToggleThemeDarkIcon}">
-                                    <Image.Triggers>
-                                        <DataTrigger TargetType="Image"
-                                                     Binding="{Binding IsDarkTheme}"
-                                                     Value="True">
-                                            <Setter Property="Source"
-                                                    Value="{StaticResource ToggleThemeLightIcon}" />
-                                        </DataTrigger>
-                                    </Image.Triggers>
-                                </Image>
-                            </Border>
-                        </HorizontalStackLayout>
+                        <Border Grid.Column="2"
+                                Grid.Row="1"
+                                WidthRequest="46"
+                                HeightRequest="46"
+                                Background="{AppThemeBinding Light={StaticResource LightThemeButtonBackground}, Dark={StaticResource DarkThemeButtonBackground}}"
+                                Stroke="{StaticResource AccentOrange}"
+                                StrokeThickness="1"
+                                StrokeShape="RoundRectangle 23"
+                                HorizontalOptions="End"
+                                VerticalOptions="Start"
+                                IsEnabled="{Binding CanRemoveCurrentTrack}"
+                                SemanticProperties.Description="Remove current track">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding RemoveCurrentTrackCommand}" />
+                            </Border.GestureRecognizers>
+                            <Image HeightRequest="20"
+                                   WidthRequest="20"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   Aspect="Center"
+                                   Source="{StaticResource RemoveCurrentTrackIcon}" />
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border"
+                                             Binding="{Binding CanRemoveCurrentTrack}"
+                                             Value="False">
+                                    <Setter Property="InputTransparent"
+                                            Value="True" />
+                                    <Setter Property="Opacity"
+                                            Value="0.45" />
+                                </DataTrigger>
+                            </Border.Triggers>
+                        </Border>
                     </Grid>
 
                     <Grid Grid.Row="1"
@@ -289,20 +295,31 @@
                                                                IsPlaying="{Binding IsPlaying}"
                                                                IsVisible="{Binding HasCurrentTrackArtwork}" />
 
-                                <Border WidthRequest="40"
-                                        HeightRequest="40"
-                                        Background="{StaticResource VinylCenter}"
-                                        StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 20"
-                                        HorizontalOptions="Center"
-                                        VerticalOptions="Center" />
-                                <Border WidthRequest="14"
-                                        HeightRequest="14"
-                                        Background="{StaticResource VinylHighlight}"
-                                        StrokeThickness="0"
-                                        StrokeShape="RoundRectangle 7"
-                                        HorizontalOptions="Center"
-                                        VerticalOptions="Center" />
+                                <Grid IsVisible="True">
+                                    <Grid.Triggers>
+                                        <DataTrigger TargetType="Grid"
+                                                     Binding="{Binding HasCurrentTrackArtwork}"
+                                                     Value="True">
+                                            <Setter Property="IsVisible"
+                                                    Value="False" />
+                                        </DataTrigger>
+                                    </Grid.Triggers>
+
+                                    <Border WidthRequest="40"
+                                            HeightRequest="40"
+                                            Background="{StaticResource VinylCenter}"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 20"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center" />
+                                    <Border WidthRequest="14"
+                                            HeightRequest="14"
+                                            Background="{StaticResource VinylHighlight}"
+                                            StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 7"
+                                            HorizontalOptions="Center"
+                                            VerticalOptions="Center" />
+                                </Grid>
                             </Grid>
                         </Border>
                     </Grid>
